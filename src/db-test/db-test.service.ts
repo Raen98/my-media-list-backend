@@ -12,17 +12,30 @@ export class DbTestService {
     error?: string;
   }> {
     try {
-      const result: { result: number }[] = await this.dataSource.query(
-        'SELECT 1 + 1 AS result',
+      const result = await this.dataSource.query<{ result: number }[]>(
+        'SELECT 1 + 1 AS result'
       );
       return { success: true, result };
     } catch (error: unknown) {
-      const errorMessage = isError(error) ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: errorMessage };
+    }
+  }
 
-      function isError(error: unknown): error is Error {
-        return error instanceof Error;
-      }
-
+  async testUsers(): Promise<{
+    success: boolean;
+    result?: any[];
+    error?: string;
+  }> {
+    try {
+      const result = await this.dataSource.query<any[]>(
+        'SELECT * FROM users LIMIT 1'
+      );
+      return { success: true, result };
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       return { success: false, error: errorMessage };
     }
   }

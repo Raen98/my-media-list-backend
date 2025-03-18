@@ -6,7 +6,20 @@ export class DbTestController {
   constructor(private readonly dbTestService: DbTestService) {}
 
   @Get()
-  async test() {
+  async test(): Promise<{
+    success: boolean;
+    result?: { result: number }[];
+    error?: string;
+  }> {
     return this.dbTestService.testConnection();
+  }
+
+  @Get('users')
+  async testUsers(): Promise<{
+    success: boolean;
+    result?: any[];
+    error?: string;
+  }> {
+    return this.dbTestService.testUsers();
   }
 }
