@@ -1,10 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ConfigService } from '@nestjs/config'; // <-- Importar ConfigService
+import { ConfigService } from '@nestjs/config';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken'; // <-- Importar JSON Web Token
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
@@ -20,13 +20,17 @@ export class AuthService {
     name: string
   ): Promise<{ message: string }> {
     try {
-      const existingUser = await this.usersRepository.findOneBy({ email });
+      const existingMail = await this.usersRepository.findOneBy({ email });
+      if (existingMail) {
+        return { message: 'email' };
+      }
+      const existingUser = await this.usersRepository.findOneBy({ name });
       if (existingUser) {
-        return { message: 'Email already exists' };
+        return { message: 'user' };
       }
 
-      if (password.length < 8) {
-        return { message: 'Password must be at least 8 characters long' };
+      if (password.length < 0) {
+        return { message: 'password' };
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -47,13 +51,13 @@ export class AuthService {
     // 1. Buscar usuario en la BD
     const user = await this.usersRepository.findOneBy({ email });
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      return { token: '' };
     }
 
     // 2. Comparar contraseñas
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      return { token: '' };
     }
 
     // 3. Generar JWT
