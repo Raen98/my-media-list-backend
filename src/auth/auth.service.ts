@@ -11,7 +11,7 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private readonly configService: ConfigService // <-- Inyectar ConfigService
+    private readonly configService: ConfigService
   ) {}
 
   async register(

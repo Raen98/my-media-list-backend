@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DbTestModule } from './db-test/db-test.module';
 import { AuthModule } from './auth/auth.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { AuthModule } from './auth/auth.module';
       inject: [ConfigService],
     }),
     DbTestModule,
-    AuthModule, // Debe estar aquí
+    AuthModule,
+    SearchModule, // Debe estar aquí
   ],
   controllers: [AppController],
   providers: [AppService],
