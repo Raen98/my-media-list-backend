@@ -7,7 +7,6 @@ dotenv.config();
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_TOKEN = process.env.TMDB_TOKEN;
 
-// Interfaz para los resultados de TMDB
 interface TmdbResult {
 	id: number;
 	poster_path?: string;
@@ -17,7 +16,6 @@ interface TmdbResult {
 	genre_ids?: number[];
 }
 
-// Interfaz para la respuesta de TMDB
 interface TmdbResponse {
 	results: TmdbResult[];
 }
@@ -27,12 +25,10 @@ export class TmdbService implements OnModuleInit {
 	private genresMovie: Record<number, string> = {};
 	private genresTv: Record<number, string> = {};
 
-	// 🔹 Cargar los géneros al iniciar el backend
 	async onModuleInit() {
 		await this.loadGenres();
 	}
 
-	// 🔹 Obtener la lista de géneros y guardarlos en memoria
 	private async loadGenres() {
 		try {
 			const [moviesRes, tvRes] = await Promise.all([
@@ -46,7 +42,6 @@ export class TmdbService implements OnModuleInit {
 				),
 			]);
 
-			// Guardar los géneros en memoria como { id: "nombre" }
 			this.genresMovie = Object.fromEntries(
 				moviesRes.data.genres.map((g) => [g.id, g.name])
 			);
@@ -63,7 +58,6 @@ export class TmdbService implements OnModuleInit {
 		}
 	}
 
-	// 🔹 Método para buscar en TMDB y devolver los géneros con nombres
 	async buscar(query: string, tipo: 'P' | 'S') {
 		console.log('TmdbService.buscar() fue llamado con:', query, tipo);
 		try {
@@ -74,14 +68,7 @@ export class TmdbService implements OnModuleInit {
 				headers: { Authorization: `Bearer ${TMDB_TOKEN}` },
 				params: { query, language: 'es-ES', page: 1 },
 			});
-
-			console.log('Enviando token a TMDB:', `Bearer ${TMDB_TOKEN}`);
-			console.log(
-				'TMDB Response:',
-				JSON.stringify(response.data, null, 2)
-			);
-
-			// 🔹 Convertir los IDs de género en nombres antes de devolver la respuesta
+			// Convertir los IDs de género en nombres antes de devolver la respuesta
 			return response.data.results.slice(0, 30).map((item) => ({
 				id_api: item.id,
 				tipo,
