@@ -12,7 +12,7 @@ interface RawgGame {
 	name?: string;
 	background_image?: string;
 	genres?: { name: string }[];
-	platforms?: { platform: { name: string } }[]; // 🔹 Añadimos plataformas
+	platforms?: { platform: { name: string } }[];
 }
 
 interface RawgGameDetails extends RawgGame {
@@ -27,18 +27,18 @@ interface RawgResponse {
 export class RawgService {
 	async buscar(query: string) {
 		try {
-			// 🔹 1️⃣ Primera llamada: Buscar juegos por nombre
+			//  Primera llamada: Buscar juegos por nombre
 			const response = await axios.get<RawgResponse>(RAWG_BASE_URL, {
 				params: {
 					key: RAWG_TOKEN,
 					search: query,
-					page_size: 5, // 🔹 Limitamos la búsqueda para eficiencia
+					page_size: 5,
 				},
 			});
 
 			const juegos = response.data.results ?? [];
 
-			// 🔹 2️⃣ Segunda llamada: Obtener descripción de cada juego
+			// Segunda llamada: Obtener descripción de cada juego
 			const juegosConDescripcion = await Promise.all(
 				juegos.map(async (juego) => {
 					try {
@@ -60,7 +60,7 @@ export class RawgService {
 							],
 							plataformas: juego.platforms?.map(
 								(p) => p.platform.name
-							) ?? ['Desconocido'], // 🔹 Incluimos siempre las plataformas
+							) ?? ['Desconocido'],
 						};
 					} catch (error) {
 						console.error(
@@ -78,7 +78,7 @@ export class RawgService {
 							],
 							plataformas: juego.platforms?.map(
 								(p) => p.platform.name
-							) ?? ['Desconocido'], // 🔹 Si falla, ponemos "Desconocido"
+							) ?? ['Desconocido'],
 						};
 					}
 				})
