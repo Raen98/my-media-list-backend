@@ -6,6 +6,7 @@ dotenv.config();
 
 const RAWG_BASE_URL = 'https://api.rawg.io/api/games';
 const RAWG_TOKEN = process.env.RAWG_TOKEN;
+const WIKIPEDIA_API = 'https://es.wikipedia.org/api/rest_v1/page/summary/';
 
 interface RawgGame {
 	id: number;
@@ -15,19 +16,20 @@ interface RawgGame {
 	platforms?: { platform: { name: string } }[];
 }
 
-interface RawgGameDetails extends RawgGame {
-	description_raw?: string;
-}
-
 interface RawgResponse {
 	results?: RawgGame[];
+}
+
+interface WikipediaResponse {
+	title: string;
+	extract?: string;
 }
 
 @Injectable()
 export class RawgService {
 	async buscar(query: string) {
 		try {
-			//  Primera llamada: Buscar juegos por nombre
+			//  Buscar juegos en RAWG
 			const response = await axios.get<RawgResponse>(RAWG_BASE_URL, {
 				params: {
 					key: RAWG_TOKEN,
@@ -38,49 +40,26 @@ export class RawgService {
 
 			const juegos = response.data.results ?? [];
 
-			// Segunda llamada: Obtener descripción de cada juego
+			//  Obtener descripción desde Wikipedia
 			const juegosConDescripcion = await Promise.all(
 				juegos.map(async (juego) => {
-					try {
-						const detailsResponse =
-							await axios.get<RawgGameDetails>(
-								`${RAWG_BASE_URL}/${juego.id}`,
-								{ params: { key: RAWG_TOKEN } }
-							);
-						return {
-							id_api: juego.id,
-							tipo: 'V',
-							imagen: juego.background_image || null,
-							titulo: juego.name || 'Sin título',
-							descripcion:
-								detailsResponse.data.description_raw ||
-								'Sin descripción',
-							genero: juego.genres?.map((g) => g.name) ?? [
-								'Desconocido',
-							],
-							plataformas: juego.platforms?.map(
-								(p) => p.platform.name
-							) ?? ['Desconocido'],
-						};
-					} catch (error) {
-						console.error(
-							`Error al obtener detalles del juego ${juego.id}:`,
-							(error as Error).message
-						);
-						return {
-							id_api: juego.id,
-							tipo: 'V',
-							imagen: juego.background_image || null,
-							titulo: juego.name || 'Sin título',
-							descripcion: 'Sin descripción',
-							genero: juego.genres?.map((g) => g.name) ?? [
-								'Desconocido',
-							],
-							plataformas: juego.platforms?.map(
-								(p) => p.platform.name
-							) ?? ['Desconocido'],
-						};
-					}
+					const descripcion = await this.buscarDescripcionWikipedia(
+						juego.name
+					);
+
+					return {
+						id_api: juego.id,
+						tipo: 'V',
+						imagen: juego.background_image || null,
+						titulo: juego.name || 'Sin título',
+						descripcion,
+						genero: juego.genres?.map((g) => g.name) ?? [
+							'Desconocido',
+						],
+						plataformas: juego.platforms?.map(
+							(p) => p.platform.name
+						) ?? ['Desconocido'],
+					};
 				})
 			);
 
@@ -89,5 +68,27 @@ export class RawgService {
 			console.error('Error en RAWG:', (error as Error).message);
 			return [];
 		}
+	}
+
+	//Método para buscar la descripción en Wikipedia
+	private async buscarDescripcionWikipedia(titulo?: string): Promise<string> {
+		if (!titulo) return 'Sin descripción';
+
+		try {
+			const response = await axios.get<WikipediaResponse>(
+				`${WIKIPEDIA_API}${encodeURIComponent(titulo)}`
+			);
+
+			if (response.data.extract) {
+				return response.data.extract;
+			}
+		} catch (error) {
+			console.error(
+				`No se encontró descripción en Wikipedia para "${titulo}":`,
+				(error as Error).message
+			);
+		}
+
+		return 'Sin descripción';
 	}
 }

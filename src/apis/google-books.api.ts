@@ -6,7 +6,7 @@ dotenv.config();
 
 const GOOGLE_BOOKS_URL = 'https://www.googleapis.com/books/v1/volumes';
 const GOOGLE_TOKEN = process.env.GOOGLE_TOKEN;
-// 🔹 Diccionario de traducción de géneros de Google Books
+//Diccionario de traducción de géneros de Google Books
 const GOOGLE_GENRES_TRANSLATIONS: Record<string, string> = {
 	Fiction: 'Ficción',
 	Nonfiction: 'No ficción',
@@ -24,6 +24,7 @@ const GOOGLE_GENRES_TRANSLATIONS: Record<string, string> = {
 	'Self-Help': 'Autoayuda',
 	'Young Adult': 'Juvenil',
 	Children: 'Infantil',
+	'Science-Fiction': 'Ciencia ficción',
 };
 
 interface GoogleBookVolume {
