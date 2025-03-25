@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SearchDto } from './dto/search.dto';
 import { TmdbService } from '../apis/tmdb.api';
 import { GoogleBooksService } from '../apis/google-books.api';
+import { RawgService } from 'src/apis/rawg.api';
 
 interface JwtPayload {
 	id: number;
@@ -12,7 +13,8 @@ interface JwtPayload {
 export class SearchService {
 	constructor(
 		private readonly tmdbService: TmdbService,
-		private readonly googleBooksService: GoogleBooksService
+		private readonly googleBooksService: GoogleBooksService,
+		private readonly rawgService: RawgService
 	) {}
 
 	async buscar(params: SearchDto, user: JwtPayload) {
@@ -28,6 +30,9 @@ export class SearchService {
 		if (tipo === 'L') {
 			return await this.googleBooksService.buscar(busqueda);
 			return [];
+		}
+		if (tipo === 'V') {
+			return await this.rawgService.buscar(busqueda);
 		}
 
 		return [];
