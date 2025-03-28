@@ -30,6 +30,8 @@ const GOOGLE_GENRES_TRANSLATIONS: Record<string, string> = {
 interface GoogleBookVolume {
 	id: string;
 	volumeInfo: {
+		pageCount: number;
+		publishedDate: string;
 		title?: string;
 		description?: string;
 		categories?: string[];
@@ -64,6 +66,9 @@ export class GoogleBooksService {
 					tipo: 'L',
 					imagen: item.volumeInfo.imageLinks?.thumbnail || null,
 					titulo: item.volumeInfo.title || 'Sin título',
+					fechaLanzamiento:
+						item.volumeInfo.publishedDate || 'Desconocida',
+					paginas: item.volumeInfo.pageCount || 0,
 					descripcion:
 						item.volumeInfo.description || 'Sin descripción',
 					genero: (item.volumeInfo.categories ?? ['Desconocido']).map(

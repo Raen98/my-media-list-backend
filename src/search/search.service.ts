@@ -25,14 +25,16 @@ export class SearchService {
 
 		if (tipo === 'P' || tipo === 'S') {
 			console.log('Llamando a tmdbService.buscar()');
-			return await this.tmdbService.buscar(busqueda, tipo);
+			const resultados = await this.tmdbService.buscar(busqueda, tipo);
+			return resultados.filter((item) => item.imagen); // 🔹 Filtra sin imagen
 		}
 		if (tipo === 'L') {
-			return await this.googleBooksService.buscar(busqueda);
-			return [];
+			const resultados = await this.googleBooksService.buscar(busqueda);
+			return resultados.filter((item) => item.imagen);
 		}
 		if (tipo === 'V') {
-			return await this.rawgService.buscar(busqueda);
+			const resultados = await this.rawgService.buscar(busqueda);
+			return resultados.filter((item) => item.imagen);
 		}
 
 		return [];

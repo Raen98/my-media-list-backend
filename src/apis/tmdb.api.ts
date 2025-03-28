@@ -69,7 +69,7 @@ export class TmdbService implements OnModuleInit {
 				params: { query, language: 'es-ES', page: 1 },
 			});
 			// Convertir los IDs de género en nombres antes de devolver la respuesta
-			return response.data.results.slice(0, 30).map((item) => ({
+			return response.data.results.slice(0, 20).map((item) => ({
 				id_api: item.id,
 				tipo,
 				imagen: item.poster_path
