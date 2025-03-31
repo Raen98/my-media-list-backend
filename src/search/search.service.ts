@@ -7,6 +7,7 @@ import { UserItemRepository } from 'src/repositories/user-item.repository';
 
 // Definición de la estructura de los resultados de búsqueda
 export interface ResultadoBusqueda {
+	item?: { id: number; estado: string } | null;
 	id_api: string;
 	tipo: string;
 	imagen: string | null;
@@ -14,7 +15,7 @@ export interface ResultadoBusqueda {
 	descripcion: string;
 	fechaLanzamiento: string;
 	genero: string[];
-	numAmigos?: number; // Número de amigos que tienen este ítem
+	numAmigos?: number;
 }
 
 // Interfaz para representar los datos del usuario autenticado
@@ -44,7 +45,7 @@ export class SearchService {
 		let resultados: ResultadoBusqueda[] = [];
 
 		try {
-			// Seleccionar la API correspondiente según el tipo de contenido
+			// Buscar en la API correspondiente
 			if (tipo === 'P' || tipo === 'S') {
 				resultados = await this.tmdbService.buscar(busqueda, tipo);
 			} else if (tipo === 'L') {
@@ -53,12 +54,24 @@ export class SearchService {
 				resultados = await this.rawgService.buscar(busqueda);
 			}
 
-			// Filtrar los resultados que no tienen imagen para mejorar la calidad de la búsqueda
+			// Filtrar los que no tienen imagen
 			resultados = resultados.filter((item) => item.imagen !== null);
 
-			// Para cada resultado, contar cuántos amigos tienen el ítem registrado
+			// Obtener todos los ítems del usuario del tipo actual
+			const userItems = await this.userItemRepository.find({
+				where: { user: { id: user.id }, tipo },
+			});
+
+			// Crear un Map para acceso rápido por id_api
+			const itemsMap = new Map<string, { id: number; estado: string }>();
+			userItems.forEach((item) => {
+				itemsMap.set(item.id_api, { id: item.id, estado: item.estado });
+			});
+
+			// Añadir numAmigos e info del item del usuario (si lo tiene)
 			await Promise.all(
 				resultados.map(async (item) => {
+					// Añadir el número de amigos que lo tienen
 					try {
 						const count =
 							await this.userItemRepository.contarUsuariosConItem(
@@ -66,7 +79,6 @@ export class SearchService {
 								item.tipo,
 								user.id
 							);
-						// Si la consulta devuelve undefined, asignar 0 por defecto
 						item.numAmigos = count ?? 0;
 					} catch (repoError) {
 						console.error(
@@ -75,15 +87,16 @@ export class SearchService {
 								? repoError.message
 								: 'Error desconocido'
 						);
-						// En caso de error, asignar 0 para evitar problemas
 						item.numAmigos = 0;
 					}
+
+					// Añadir información del ítem del usuario (si existe)
+					item.item = itemsMap.get(item.id_api) || null;
 				})
 			);
 
 			return resultados;
 		} catch (error) {
-			// Manejo seguro de errores
 			console.error(
 				'Error en búsqueda:',
 				error instanceof Error ? error.message : 'Error desconocido'

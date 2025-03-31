@@ -48,12 +48,15 @@ export class AuthController {
 			required: ['email', 'password'],
 		},
 	})
-	@ApiResponse({ status: 200, description: 'Login exitoso, devuelve JWT' })
+	@ApiResponse({
+		status: 200,
+		description: 'Login exitoso, devuelve JWT y Id',
+	})
 	@ApiResponse({ status: 401, description: 'Credenciales incorrectas' })
 	async login(
 		@Body('email') email: string,
 		@Body('password') password: string
-	): Promise<{ token: string }> {
+	): Promise<{ token: string; id: number }> {
 		return this.authService.login(email, password);
 	}
 }

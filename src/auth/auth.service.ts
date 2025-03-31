@@ -51,23 +51,26 @@ export class AuthService {
 		}
 	}
 
-	async login(email: string, password: string): Promise<{ token: string }> {
+	async login(
+		email: string,
+		password: string
+	): Promise<{ token: string; id: number }> {
 		// 1. Buscar usuario en la BD
 		const user = await this.usersRepository.findOneBy({ email });
 		if (!user) {
-			return { token: '' };
+			return { token: '', id: -1 };
 		}
 
 		// 2. Comparar contraseñas
 		const isPasswordValid = await bcrypt.compare(password, user.password);
 		if (!isPasswordValid) {
-			return { token: '' };
+			return { token: '', id: -1 };
 		}
 
 		// 3. Generar JWT
 		const token = this.generateJwt(user);
 
-		return { token };
+		return { token, id: user.id };
 	}
 
 	private generateJwt(user: User): string {
