@@ -4,16 +4,18 @@ import {
 	PrimaryGeneratedColumn,
 	ManyToOne,
 	Unique,
+	JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 
 @Entity('user_items')
-@Unique(['user', 'id_api', 'tipo']) // 🔹 Evita duplicados
+@Unique(['user', 'id_api', 'tipo']) //
 export class UserItem {
 	@PrimaryGeneratedColumn()
 	id: number;
 
 	@ManyToOne(() => User, (user) => user.items, { onDelete: 'CASCADE' })
+	@JoinColumn({ name: 'user_id' })
 	user: User;
 
 	@Column()
@@ -24,10 +26,10 @@ export class UserItem {
 
 	@Column({
 		type: 'enum',
-		enum: ['pendiente', 'en progreso', 'completado', 'abandonado'],
-		default: 'pendiente',
+		enum: ['P', 'E', 'C', 'A'],
+		default: 'P',
 	})
-	estado: 'pendiente' | 'en progreso' | 'completado' | 'abandonado';
+	estado: 'P' | 'E' | 'C' | 'A';
 
 	@Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
 	created_at: Date;

@@ -9,11 +9,13 @@ const RAWG_TOKEN = process.env.RAWG_TOKEN;
 const WIKIPEDIA_API = 'https://es.wikipedia.org/api/rest_v1/page/summary/';
 
 interface RawgGame {
-	id: number;
+	released: string;
+	id: string;
 	name?: string;
 	background_image?: string;
 	genres?: { name: string }[];
 	platforms?: { platform: { name: string } }[];
+	developers?: { name: string }[];
 }
 
 interface RawgResponse {
@@ -52,7 +54,9 @@ export class RawgService {
 						tipo: 'V',
 						imagen: juego.background_image || null,
 						titulo: juego.name || 'Sin título',
-						descripcion,
+						descripcion: descripcion || 'Sin descripción',
+						autor: juego.developers?.[0]?.name || 'Desconocido',
+						fechaLanzamiento: juego.released || 'Desconocido',
 						genero: juego.genres?.map((g) => g.name) ?? [
 							'Desconocido',
 						],

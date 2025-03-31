@@ -30,6 +30,7 @@ const GOOGLE_GENRES_TRANSLATIONS: Record<string, string> = {
 interface GoogleBookVolume {
 	id: string;
 	volumeInfo: {
+		authors?: string[];
 		pageCount: number;
 		publishedDate: string;
 		title?: string;
@@ -46,6 +47,46 @@ interface GoogleBooksResponse {
 }
 @Injectable()
 export class GoogleBooksService {
+	async buscarPorId(id_api: string): Promise<{
+		id_api: string;
+		imagen: string | null;
+		titulo: string;
+		descripcion: string;
+		genero: string[];
+		autor: string;
+		paginas: number | null;
+		fechaLanzamiento: string;
+	} | null> {
+		try {
+			const response = await axios.get<{ volumeInfo: any }>(
+				`https://www.googleapis.com/books/v1/volumes/${id_api}`,
+				{
+					params: { key: GOOGLE_TOKEN },
+				}
+			);
+
+			const item: GoogleBookVolume = response.data as GoogleBookVolume; // 👈 Se utiliza la interfaz GoogleBookVolume para tipar la estructura
+
+			return {
+				id_api: item.id,
+				imagen: item.volumeInfo?.imageLinks?.thumbnail || null,
+				titulo: item.volumeInfo?.title || 'Sin título',
+				descripcion: item.volumeInfo?.description || 'Sin descripción',
+				genero: item.volumeInfo?.categories ?? ['Desconocido'],
+				autor: (item.volumeInfo?.authors || ['Desconocido']).join(', '),
+				paginas: item.volumeInfo?.pageCount ?? null,
+				fechaLanzamiento:
+					item.volumeInfo?.publishedDate || 'Desconocido',
+			};
+		} catch (error) {
+			console.error(
+				'Error al buscar libro por ID:',
+				(error as Error).message
+			);
+			return null;
+		}
+	}
+
 	async buscar(query: string) {
 		try {
 			const response = await axios.get<GoogleBooksResponse>(
@@ -69,6 +110,7 @@ export class GoogleBooksService {
 					fechaLanzamiento:
 						item.volumeInfo.publishedDate || 'Desconocida',
 					paginas: item.volumeInfo.pageCount || 0,
+					autor: item.volumeInfo.authors?.join(', ') || 'Desconocido',
 					descripcion:
 						item.volumeInfo.description || 'Sin descripción',
 					genero: (item.volumeInfo.categories ?? ['Desconocido']).map(

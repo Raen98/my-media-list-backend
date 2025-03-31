@@ -1,11 +1,25 @@
 import { Module } from '@nestjs/common';
-import { SearchController } from './search.controller';
 import { SearchService } from './search.service';
-import { ApisModule } from '../apis/apis.module';
+import { SearchController } from './search.controller';
+import { TmdbService } from '../apis/tmdb.api';
+import { GoogleBooksService } from '../apis/google-books.api';
+import { RawgService } from '../apis/rawg.api';
+import { UserItemRepository } from '../repositories/user-item.repository';
+import { DataSource } from 'typeorm';
 
 @Module({
-	imports: [ApisModule],
 	controllers: [SearchController],
-	providers: [SearchService],
+	providers: [
+		SearchService,
+		TmdbService,
+		GoogleBooksService,
+		RawgService,
+		{
+			provide: UserItemRepository,
+			useFactory: (dataSource: DataSource) =>
+				new UserItemRepository(dataSource),
+			inject: [DataSource],
+		},
+	],
 })
 export class SearchModule {}

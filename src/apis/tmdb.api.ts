@@ -8,7 +8,9 @@ const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_TOKEN = process.env.TMDB_TOKEN;
 
 interface TmdbResult {
-	id: number;
+	first_air_date: string | null;
+	release_date: string | null;
+	id: string;
 	poster_path?: string;
 	title?: string;
 	name?: string;
@@ -25,10 +27,12 @@ export class TmdbService implements OnModuleInit {
 	private genresMovie: Record<number, string> = {};
 	private genresTv: Record<number, string> = {};
 
+	// Cargar los géneros al iniciar el módulo
 	async onModuleInit() {
 		await this.loadGenres();
 	}
 
+	// Carga y almacena los géneros de películas y series en memoria
 	private async loadGenres() {
 		try {
 			const [moviesRes, tvRes] = await Promise.all([
@@ -58,6 +62,7 @@ export class TmdbService implements OnModuleInit {
 		}
 	}
 
+	// Realiza la búsqueda en TMDB según el tipo (P = película, S = serie)
 	async buscar(query: string, tipo: 'P' | 'S') {
 		console.log('TmdbService.buscar() fue llamado con:', query, tipo);
 		try {
@@ -68,7 +73,8 @@ export class TmdbService implements OnModuleInit {
 				headers: { Authorization: `Bearer ${TMDB_TOKEN}` },
 				params: { query, language: 'es-ES', page: 1 },
 			});
-			// Convertir los IDs de género en nombres antes de devolver la respuesta
+
+			// Procesamos los resultados sin incluir el autor
 			return response.data.results.slice(0, 20).map((item) => ({
 				id_api: item.id,
 				tipo,
@@ -77,6 +83,8 @@ export class TmdbService implements OnModuleInit {
 					: null,
 				titulo: item.title || item.name || 'Sin título',
 				descripcion: item.overview || 'Sin descripción',
+				fechaLanzamiento:
+					item.release_date || item.first_air_date || 'Desconocido',
 				genero: (item.genre_ids ?? []).map((id) =>
 					tipo === 'P'
 						? this.genresMovie[id] || 'Desconocido'
