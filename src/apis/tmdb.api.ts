@@ -32,6 +32,109 @@ export class TmdbService implements OnModuleInit {
 		await this.loadGenres();
 	}
 
+	// Este método obtiene los detalles completos de una película en TMDB
+	// Incluye título, imagen, géneros, fecha, director y duración.
+	// También accede a los créditos (append_to_response=credits) para extraer el director.
+
+	async buscarPeliculaPorId(id_api: string) {
+		try {
+			const response = await axios.get<{
+				id: number;
+				poster_path?: string;
+				title: string;
+				overview?: string;
+				genres?: { id: number; name: string }[];
+				release_date?: string;
+				credits?: {
+					crew?: { job: string; name: string }[];
+				};
+				runtime?: number;
+			}>(`${TMDB_BASE_URL}/movie/${id_api}`, {
+				headers: { Authorization: `Bearer ${TMDB_TOKEN}` },
+				params: {
+					language: 'es-ES',
+					append_to_response: 'credits',
+				},
+			});
+
+			const data: {
+				id: number;
+				poster_path?: string;
+				title: string;
+				overview?: string;
+				genres?: { id: number; name: string }[];
+				release_date?: string;
+				credits?: {
+					crew?: { job: string; name: string }[];
+				};
+				runtime?: number;
+			} = response.data;
+
+			const director =
+				data.credits?.crew?.find((person) => person.job === 'Director')
+					?.name || 'Desconocido';
+
+			return {
+				id_api: data.id.toString(),
+				imagen: data.poster_path
+					? `https://image.tmdb.org/t/p/w500${data.poster_path}`
+					: null,
+				titulo: data.title,
+				descripcion: data.overview || 'Sinopsis no disponible',
+				genero: data.genres?.map((g) => g.name) ?? ['Desconocido'],
+				fechaLanzamiento: data.release_date || 'Desconocido',
+				director,
+				duracion: data.runtime ?? 0,
+			};
+		} catch (error) {
+			console.error('Error al buscar película en TMDB:', error);
+			throw new Error('No se pudo obtener la película');
+		}
+	}
+
+	async buscarSeriePorId({ id_api }: { id_api: string }) {
+		try {
+			const response = await axios.get(`${TMDB_BASE_URL}/tv/${id_api}`, {
+				headers: { Authorization: `Bearer ${TMDB_TOKEN}` },
+				params: {
+					language: 'es-ES',
+				},
+			});
+
+			const data = response.data as {
+				id: number;
+				poster_path?: string;
+				name?: string;
+				overview?: string;
+				genres?: { id: number; name: string }[];
+				first_air_date?: string;
+				number_of_seasons?: number;
+				number_of_episodes?: number;
+				created_by?: { name: string }[];
+			};
+
+			// Buscamos al primer creador
+			const creador = data.created_by?.[0]?.name || 'Desconocido';
+
+			return {
+				id_api: data.id.toString(),
+				imagen: data.poster_path
+					? `https://image.tmdb.org/t/p/w500${data.poster_path}`
+					: null,
+				titulo: data.name || 'Sin título',
+				descripcion: data.overview || 'Sinopsis no disponible',
+				genero: data.genres?.map((g) => g.name) ?? ['Desconocido'],
+				fechaLanzamiento: data.first_air_date || 'Desconocido',
+				creador,
+				temporadas: data.number_of_seasons ?? 0,
+				episodios: data.number_of_episodes ?? 0,
+			};
+		} catch (error) {
+			console.error('Error al buscar serie en TMDB:', error);
+			throw new Error('No se pudo obtener la serie');
+		}
+	}
+
 	// Carga y almacena los géneros de películas y series en memoria
 	private async loadGenres() {
 		try {

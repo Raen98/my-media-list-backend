@@ -29,6 +29,7 @@ interface WikipediaResponse {
 
 @Injectable()
 export class RawgService {
+	// Método para buscar videojuegos en RAWG
 	async buscar(query: string) {
 		try {
 			//  Buscar juegos en RAWG
@@ -94,5 +95,53 @@ export class RawgService {
 		}
 
 		return 'Sin descripción';
+	}
+
+	/**
+	 * Obtiene el detalle completo de un videojuego por su ID desde RAWG.
+	 * Incluye descripción desde Wikipedia si está disponible.
+	 *
+	 * @param id_api ID del juego en RAWG
+	 * @returns Objeto con los detalles del juego
+	 */
+	async buscarPorId(id_api: string) {
+		try {
+			const response = await axios.get<RawgGame>(
+				`${RAWG_BASE_URL}/${id_api}`,
+				{
+					params: {
+						key: RAWG_TOKEN,
+					},
+				}
+			);
+
+			const juego = response.data;
+
+			// Intentamos obtener una descripción extendida desde Wikipedia
+			const descripcion = await this.buscarDescripcionWikipedia(
+				juego.name
+			);
+
+			return {
+				id_api: juego.id?.toString(),
+				imagen: juego.background_image || null,
+				titulo: juego.name || 'Sin título',
+				descripcion: descripcion || 'Sin descripción',
+				genero: juego.genres?.map((g) => g.name) ?? ['Desconocido'],
+				año: juego.released
+					? new Date(juego.released).getFullYear()
+					: null,
+				desarrolladora: juego.developers?.[0]?.name || 'Desconocida',
+				plataforma: juego.platforms?.map((p) => p.platform.name) ?? [
+					'Desconocido',
+				],
+			};
+		} catch (error) {
+			console.error(
+				'Error al obtener juego por ID en RAWG:',
+				(error as Error).message
+			);
+			throw new Error('No se pudo obtener el detalle del videojuego');
+		}
 	}
 }
