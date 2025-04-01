@@ -38,6 +38,7 @@ export class SearchService {
 		params: SearchDto,
 		user: JwtPayload
 	): Promise<ResultadoBusqueda[]> {
+		console.log('Iniciando búsqueda...');
 		const { busqueda, tipo } = params;
 		console.log(`Usuario autenticado: ${user.email}`);
 		console.log(`Buscando "${busqueda}" en la categoría "${tipo}"`);
@@ -59,7 +60,10 @@ export class SearchService {
 
 			// Obtener todos los ítems del usuario del tipo actual
 			const userItems = await this.userItemRepository.find({
-				where: { user: { id: user.id }, tipo },
+				where: {
+					user: { id: user.id },
+					tipo: tipo as 'P' | 'S' | 'L' | 'V',
+				},
 			});
 
 			// Crear un Map para acceso rápido por id_api
