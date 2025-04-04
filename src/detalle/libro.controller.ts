@@ -58,11 +58,9 @@ export class LibrosController {
 			'L'
 		);
 
-		return [
-			{
-				...libro,
-				amigos,
-			},
-		];
+		return {
+			...libro,
+			amigos,
+		};
 	}
 }

@@ -155,8 +155,6 @@ export class TmdbService implements OnModuleInit {
 			this.genresTv = Object.fromEntries(
 				tvRes.data.genres.map((g) => [g.id, g.name])
 			);
-
-			console.log('Géneros de películas y series cargados en memoria.');
 		} catch (error) {
 			console.error(
 				'Error al cargar los géneros de TMDB:',

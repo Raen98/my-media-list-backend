@@ -62,18 +62,16 @@ export class SerieController {
 			'S'
 		);
 
-		return [
-			{
-				...serie,
-				item: userItem
-					? { id: userItem.id, estado: userItem.estado }
-					: null,
-				amigos: amigos.map((a) => ({
-					id: a.id,
-					estado: a.estado,
-					imagen_id: a.imagen_id,
-				})),
-			},
-		];
+		return {
+			...serie,
+			item: userItem
+				? { id: userItem.id, estado: userItem.estado }
+				: null,
+			amigos: amigos.map((a) => ({
+				id: a.id,
+				estado: a.estado,
+				imagen_id: a.imagen_id,
+			})),
+		};
 	}
 }
