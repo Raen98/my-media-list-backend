@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for my-media-list-backend on 2025-03-23T16:08:12Z
+# fly.toml app configuration file generated for my-media-list-backend-drrypa on 2025-04-06T10:45:47Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'my-media-list-backend'
-primary_region = 'cdg'
+app = 'my-media-list-backend-drrypa'
+primary_region = 'mad'
 
 [build]
 
