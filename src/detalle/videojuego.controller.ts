@@ -64,6 +64,7 @@ export class VideojuegoController {
 		});
 
 		// Obtenemos los amigos que también lo tienen
+		// y su estado (si lo tienen o no)
 		const amigos = await this.userItemRepo.obtenerAmigosConItem(
 			user.id,
 			id_api,
