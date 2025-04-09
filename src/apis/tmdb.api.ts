@@ -70,7 +70,7 @@ export class TmdbService implements OnModuleInit {
 				runtime?: number;
 			} = response.data;
 
-			const director =
+			const autor =
 				data.credits?.crew?.find((person) => person.job === 'Director')
 					?.name || 'Desconocido';
 
@@ -83,7 +83,7 @@ export class TmdbService implements OnModuleInit {
 				descripcion: data.overview || 'Sinopsis no disponible',
 				genero: data.genres?.map((g) => g.name) ?? ['Desconocido'],
 				fechaLanzamiento: data.release_date || 'Desconocido',
-				director,
+				autor: autor,
 				duracion: data.runtime ?? 0,
 			};
 		} catch (error) {
@@ -114,7 +114,7 @@ export class TmdbService implements OnModuleInit {
 			};
 
 			// Buscamos al primer creador
-			const creador = data.created_by?.[0]?.name || 'Desconocido';
+			const autor = data.created_by?.[0]?.name || 'Desconocido';
 
 			return {
 				id_api: data.id.toString(),
@@ -125,7 +125,7 @@ export class TmdbService implements OnModuleInit {
 				descripcion: data.overview || 'Sinopsis no disponible',
 				genero: data.genres?.map((g) => g.name) ?? ['Desconocido'],
 				fechaLanzamiento: data.first_air_date || 'Desconocido',
-				creador,
+				autor: autor,
 				temporadas: data.number_of_seasons ?? 0,
 				episodios: data.number_of_episodes ?? 0,
 			};
@@ -175,7 +175,6 @@ export class TmdbService implements OnModuleInit {
 				params: { query, language: 'es-ES', page: 1 },
 			});
 
-			// Procesamos los resultados sin incluir el autor
 			return response.data.results.slice(0, 20).map((item) => ({
 				id_api: item.id,
 				tipo,

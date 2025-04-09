@@ -5,7 +5,7 @@ import { GoogleBooksService } from '../apis/google-books.api';
 import { RawgService } from 'src/apis/rawg.api';
 import { UserItemRepository } from 'src/repositories/user-item.repository';
 
-// Definición de la estructura de los resultados de búsqueda
+// Resultado enriquecido de búsqueda para enviar al frontend
 export interface ResultadoBusqueda {
 	item?: { id: number; estado: string } | null;
 	id_api: string;
@@ -18,7 +18,7 @@ export interface ResultadoBusqueda {
 	numAmigos?: number;
 }
 
-// Interfaz para representar los datos del usuario autenticado
+// Payload del usuario autenticado (viene del JWT)
 interface JwtPayload {
 	id: number;
 	email: string;
@@ -33,20 +33,23 @@ export class SearchService {
 		private readonly userItemRepository: UserItemRepository
 	) {}
 
-	// Método principal para realizar la búsqueda en las APIs externas
+	/**
+	 * Realiza una búsqueda en APIs externas según el tipo (P, S, L, V).
+	 * Devuelve los resultados enriquecidos con estado del usuario y nº de amigos.
+	 */
 	async buscar(
 		params: SearchDto,
 		user: JwtPayload
 	): Promise<ResultadoBusqueda[]> {
-		console.log('Iniciando búsqueda...');
 		const { busqueda, tipo } = params;
-		console.log(`Usuario autenticado: ${user.email}`);
-		console.log(`Buscando "${busqueda}" en la categoría "${tipo}"`);
+		console.log(
+			` Usuario ${user.email} buscando "${busqueda}" en "${tipo}"`
+		);
 
 		let resultados: ResultadoBusqueda[] = [];
 
 		try {
-			// Buscar en la API correspondiente
+			// Llamar a la API correspondiente
 			if (tipo === 'P' || tipo === 'S') {
 				resultados = await this.tmdbService.buscar(busqueda, tipo);
 			} else if (tipo === 'L') {
@@ -55,10 +58,10 @@ export class SearchService {
 				resultados = await this.rawgService.buscar(busqueda);
 			}
 
-			// Filtrar los que no tienen imagen
+			// Filtrar los que no tengan imagen
 			resultados = resultados.filter((item) => item.imagen !== null);
 
-			// Obtener todos los ítems del usuario del tipo actual
+			// Obtener los ítems guardados por el usuario de ese tipo
 			const userItems = await this.userItemRepository.find({
 				where: {
 					user: { id: user.id },
@@ -66,16 +69,19 @@ export class SearchService {
 				},
 			});
 
-			// Crear un Map para acceso rápido por id_api
+			// Crear un Map de acceso rápido por id_api
 			const itemsMap = new Map<string, { id: number; estado: string }>();
 			userItems.forEach((item) => {
-				itemsMap.set(item.id_api, { id: item.id, estado: item.estado });
+				const key = String(item.id_api).trim();
+				itemsMap.set(key, { id: item.id, estado: item.estado });
 			});
 
-			// Añadir numAmigos e info del item del usuario (si lo tiene)
+			// Añadir info extra (estado del usuario y nº de amigos)
 			await Promise.all(
 				resultados.map(async (item) => {
-					// Añadir el número de amigos que lo tienen
+					const key = String(item.id_api).trim();
+
+					// Contar amigos que lo tienen
 					try {
 						const count =
 							await this.userItemRepository.contarUsuariosConItem(
@@ -84,27 +90,25 @@ export class SearchService {
 								user.id
 							);
 						item.numAmigos = count ?? 0;
-					} catch (repoError) {
+					} catch (err) {
 						console.error(
-							`Error al contar amigos para ${item.id_api}:`,
-							repoError instanceof Error
-								? repoError.message
-								: 'Error desconocido'
+							` Error contando amigos para ${item.id_api}:`,
+							err
 						);
 						item.numAmigos = 0;
 					}
 
-					// Añadir información del ítem del usuario (si existe)
-					item.item = itemsMap.get(item.id_api) || null;
+					// Verificar si el usuario ya lo tiene guardado
+					const guardado = itemsMap.get(key);
+					item.item = guardado
+						? { id: guardado.id, estado: guardado.estado }
+						: null;
 				})
 			);
 
 			return resultados;
 		} catch (error) {
-			console.error(
-				'Error en búsqueda:',
-				error instanceof Error ? error.message : 'Error desconocido'
-			);
+			console.error(' Error general en búsqueda:', error);
 			return [];
 		}
 	}
