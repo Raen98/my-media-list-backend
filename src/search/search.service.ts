@@ -61,7 +61,7 @@ export class SearchService {
 			// Filtrar los que no tengan imagen
 			resultados = resultados.filter((item) => item.imagen !== null);
 
-			// Obtener los ítems guardados por el usuario de ese tipo
+			// Obtener los ítems guardados por el usuario de ese tipo.
 			const userItems = await this.userItemRepository.find({
 				where: {
 					user: { id: user.id },
