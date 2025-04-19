@@ -36,15 +36,45 @@ export class ActividadController {
 	) {}
 
 	/**
-	 * GET /actividad/:id?
-	 * Obtiene la actividad de un usuario. Si no se proporciona ID, devuelve la actividad del usuario autenticado y sus amigos.
+	 * GET /actividad
+	 * Obtiene la actividad del usuario autenticado y sus amigos.
 	 */
-	@Get(':id?')
-	@ApiOperation({ summary: 'Obtener actividad de usuario' })
+	@Get()
+	@ApiOperation({ summary: 'Obtener actividad propia y de amigos' })
+	@ApiQuery({
+		name: 'pagina',
+		required: false,
+		description: 'Número de página',
+		type: Number,
+	})
+	@ApiQuery({
+		name: 'limite',
+		required: false,
+		description: 'Elementos por página',
+		type: Number,
+	})
+	@ApiResponse({
+		status: 200,
+		description: 'Feed de actividad propia y de amigos',
+	})
+	async getActividadPropia(
+		@Query('pagina', new DefaultValuePipe(1), ParseIntPipe) pagina: number,
+		@Query('limite', new DefaultValuePipe(10), ParseIntPipe) limite: number,
+		@Req() req: AuthRequest
+	) {
+		return this.getActividad(null, pagina, limite, req);
+	}
+
+	/**
+	 * GET /actividad/:id
+	 * Obtiene la actividad de un usuario específico.
+	 */
+	@Get(':id')
+	@ApiOperation({ summary: 'Obtener actividad de un usuario específico' })
 	@ApiParam({
 		name: 'id',
-		required: false,
-		description: 'ID del usuario (opcional)',
+		required: true,
+		description: 'ID del usuario',
 	})
 	@ApiQuery({
 		name: 'pagina',
@@ -60,13 +90,25 @@ export class ActividadController {
 	})
 	@ApiResponse({
 		status: 200,
-		description: 'Feed de actividad',
+		description: 'Feed de actividad del usuario',
 	})
-	async getActividad(
+	async getActividadById(
 		@Param('id') id: string,
 		@Query('pagina', new DefaultValuePipe(1), ParseIntPipe) pagina: number,
 		@Query('limite', new DefaultValuePipe(10), ParseIntPipe) limite: number,
 		@Req() req: AuthRequest
+	) {
+		return this.getActividad(id, pagina, limite, req);
+	}
+
+	/**
+	 * Método interno compartido para obtener actividad
+	 */
+	private async getActividad(
+		id: string | null,
+		pagina: number,
+		limite: number,
+		req: AuthRequest
 	) {
 		if (!req.user) {
 			return [];

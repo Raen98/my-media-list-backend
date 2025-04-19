@@ -31,23 +31,44 @@ export class PerfilController {
 	) {}
 
 	/**
-	 * GET /perfil/:id?
-	 * Obtiene el perfil de un usuario. Si no se proporciona ID, devuelve el perfil del usuario autenticado.
+	 * GET /perfil
+	 * Obtiene el perfil del usuario autenticado.
 	 */
-	@Get(':id?')
-	@ApiOperation({ summary: 'Obtener perfil de usuario' })
+	@Get()
+	@ApiOperation({ summary: 'Obtener perfil propio' })
+	@ApiResponse({
+		status: 200,
+		description: 'Perfil del usuario autenticado',
+	})
+	@ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+	async getPerfilPropio(@Req() req: AuthRequest) {
+		return this.getPerfil(null, req);
+	}
+
+	/**
+	 * GET /perfil/:id
+	 * Obtiene el perfil de un usuario específico.
+	 */
+	@Get(':id')
+	@ApiOperation({ summary: 'Obtener perfil de usuario por ID' })
 	@ApiParam({
 		name: 'id',
-		required: false,
-		description:
-			'ID del usuario (opcional, si no se proporciona devuelve el perfil propio)',
+		required: true,
+		description: 'ID del usuario',
 	})
 	@ApiResponse({
 		status: 200,
 		description: 'Perfil de usuario',
 	})
 	@ApiResponse({ status: 404, description: 'Usuario no encontrado' })
-	async getPerfil(@Param('id') id: string, @Req() req: AuthRequest) {
+	async getPerfilById(@Param('id') id: string, @Req() req: AuthRequest) {
+		return this.getPerfil(id, req);
+	}
+
+	/**
+	 * Método interno para obtener perfil
+	 */
+	private async getPerfil(id: string | null, req: AuthRequest) {
 		if (!req.user) {
 			throw new NotFoundException('Usuario no autenticado');
 		}
