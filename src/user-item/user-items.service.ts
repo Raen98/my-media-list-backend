@@ -94,4 +94,85 @@ export class UserItemsService {
 		await this.userItemsRepo.remove(item);
 		return { message: 'Ítem eliminado correctamente.' };
 	}
+
+	/**
+	 * Busca un ítem existente por id_api y tipo para un usuario específico
+	 */
+	async findExistingItem(
+		id_api: string,
+		tipo: string,
+		userId: number
+	): Promise<UserItem | null> {
+		return this.userItemsRepo.findOne({
+			where: {
+				id_api,
+				tipo: tipo as 'P' | 'S' | 'L' | 'V',
+				user: { id: userId },
+			},
+			relations: ['user'],
+		});
+	}
+
+	/**
+	 * Obtiene todos los ítems de un usuario, con filtros opcionales
+	 */
+	async getItemsByUser(
+		userId: number,
+		tipo?: string,
+		estado?: string
+	): Promise<UserItem[]> {
+		const query = this.userItemsRepo
+			.createQueryBuilder('item')
+			.leftJoinAndSelect('item.user', 'user')
+			.where('user.id = :userId', { userId });
+
+		if (tipo) {
+			query.andWhere('item.tipo = :tipo', { tipo });
+		}
+
+		if (estado) {
+			query.andWhere('item.estado = :estado', { estado });
+		}
+
+		return query.getMany();
+	}
+
+	/**
+	 * Cuenta el número total de ítems de un usuario, con filtros opcionales
+	 */
+	async countUserItems(
+		userId: number,
+		tipo?: string,
+		estado?: string
+	): Promise<number> {
+		const query = this.userItemsRepo
+			.createQueryBuilder('item')
+			.leftJoin('item.user', 'user')
+			.where('user.id = :userId', { userId });
+
+		if (tipo) {
+			query.andWhere('item.tipo = :tipo', { tipo });
+		}
+
+		if (estado) {
+			query.andWhere('item.estado = :estado', { estado });
+		}
+
+		return query.getCount();
+	}
+
+	/**
+	 * Obtiene los ítems agregados o actualizados más recientemente
+	 */
+	async getRecentItems(
+		userId: number,
+		limit: number = 5
+	): Promise<UserItem[]> {
+		return this.userItemsRepo.find({
+			where: { user: { id: userId } },
+			order: { updated_at: 'DESC' },
+			take: limit,
+			relations: ['user'],
+		});
+	}
 }

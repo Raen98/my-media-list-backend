@@ -9,6 +9,8 @@ import { SearchModule } from './search/search.module';
 import { UserItemsModule } from './user-item/user-items.module';
 import { DetalleModule } from './detalle/detalle.module';
 import { SocialModule } from './social/social.module';
+import { HomeModule } from './home/home.module';
+import { UserModule } from './user/user.module';
 
 @Module({
 	imports: [
@@ -36,6 +38,8 @@ import { SocialModule } from './social/social.module';
 		UserItemsModule,
 		DetalleModule,
 		SocialModule,
+		HomeModule,
+		UserModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],
