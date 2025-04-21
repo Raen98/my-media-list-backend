@@ -20,4 +20,7 @@ export class User {
 
 	@OneToMany(() => UserItem, (userItem) => userItem.user)
 	items: UserItem[];
+
+	@Column({ type: 'text', nullable: true })
+	bio: string;
 }

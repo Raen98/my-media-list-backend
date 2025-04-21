@@ -7,6 +7,8 @@ import {
 	NotFoundException,
 	ParseIntPipe,
 	Post,
+	Put,
+	Body,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthRequest } from '../auth/auth-request.interface';
@@ -18,6 +20,7 @@ import {
 	ApiOperation,
 	ApiParam,
 	ApiResponse,
+	ApiBody,
 } from '@nestjs/swagger';
 
 @ApiTags('Perfil')
@@ -83,6 +86,7 @@ export class PerfilController {
 			username?: string;
 			created_at: Date;
 			avatar?: string;
+			bio?: string;
 		} | null;
 
 		if (!user) {
@@ -108,6 +112,7 @@ export class PerfilController {
 			username:
 				user.username || user.name.toLowerCase().replace(/\s+/g, ''),
 			fechaRegistro: user.created_at,
+			bio: user.bio || '',
 			totalContenidos,
 			totalAmigos,
 			avatar: user.avatar || 'avatar1',
@@ -168,5 +173,34 @@ export class PerfilController {
 			await this.userRepository.followUser(userId, targetUserId);
 			return { siguiendo: true, mensaje: 'Ahora sigues a este usuario' };
 		}
+	}
+
+	@Put('bio')
+	@ApiOperation({ summary: 'Actualizar biografía del usuario' })
+	@ApiBody({
+		schema: {
+			properties: {
+				bio: {
+					type: 'string',
+					example: 'Me gusta el cine y los videojuegos',
+				},
+			},
+		},
+	})
+	@ApiResponse({
+		status: 200,
+		description: 'Biografía actualizada correctamente',
+	})
+	async updateBio(@Body('bio') bio: string, @Req() req: AuthRequest) {
+		if (!req.user) {
+			throw new NotFoundException('Usuario no autenticado');
+		}
+
+		await this.userRepository.update(req.user.id, { bio });
+
+		return {
+			message: 'Biografía actualizada correctamente',
+			bio,
+		};
 	}
 }

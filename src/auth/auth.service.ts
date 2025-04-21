@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+	Injectable,
+	UnauthorizedException,
+	BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -71,6 +75,66 @@ export class AuthService {
 		const token = this.generateJwt(user);
 
 		return { token, id: user.id };
+	}
+
+	async changePassword(
+		userId: number,
+		currentPassword: string,
+		newPassword: string
+	): Promise<{ message: string }> {
+		// Buscar el usuario
+		const user = await this.usersRepository.findOneBy({ id: userId });
+		if (!user) {
+			throw new UnauthorizedException('Usuario no encontrado');
+		}
+
+		// Verificar contraseña actual
+		const isPasswordValid = await bcrypt.compare(
+			currentPassword,
+			user.password
+		);
+		if (!isPasswordValid) {
+			throw new UnauthorizedException('Contraseña actual incorrecta');
+		}
+
+		// Verificar que la nueva contraseña no sea igual a la actual
+		if (currentPassword === newPassword) {
+			throw new BadRequestException(
+				'La nueva contraseña debe ser diferente a la actual'
+			);
+		}
+
+		// Hashear y guardar la nueva contraseña
+		const hashedPassword = await bcrypt.hash(newPassword, 10);
+		user.password = hashedPassword;
+
+		await this.usersRepository.save(user);
+
+		return { message: 'Contraseña actualizada correctamente' };
+	}
+
+	async deleteAccount(
+		userId: number,
+		password: string
+	): Promise<{ message: string }> {
+		// Buscar el usuario
+		const user = await this.usersRepository.findOneBy({ id: userId });
+		if (!user) {
+			throw new UnauthorizedException('Usuario no encontrado');
+		}
+
+		// Verificar contraseña
+		const isPasswordValid = await bcrypt.compare(password, user.password);
+		if (!isPasswordValid) {
+			throw new UnauthorizedException('Contraseña incorrecta');
+		}
+
+		// Eliminar usuario
+		// La cascada eliminará todos los registros relacionados automáticamente
+		// debido a las restricciones ON DELETE CASCADE en la base de datos
+		await this.usersRepository.remove(user);
+
+		return { message: 'Cuenta eliminada correctamente' };
 	}
 
 	private generateJwt(user: User): string {

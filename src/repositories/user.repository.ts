@@ -143,4 +143,16 @@ export class UserRepository extends Repository<User> {
 			throw error;
 		}
 	}
+
+	async updateBio(userId: number, bio: string): Promise<void> {
+		try {
+			await this.dataSource.query(
+				`UPDATE users SET bio = ? WHERE id = ?`,
+				[bio, userId]
+			);
+		} catch (error) {
+			console.error('Error al actualizar la biografía:', error);
+			throw error;
+		}
+	}
 }
