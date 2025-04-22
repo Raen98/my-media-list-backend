@@ -155,4 +155,40 @@ export class UserRepository extends Repository<User> {
 			throw error;
 		}
 	}
+
+	async countFollowers(userId: number): Promise<number> {
+		try {
+			const result: { count: number }[] = await this.dataSource.query(
+				`
+			SELECT COUNT(*) as count
+			FROM user_followers
+			WHERE followed_id = ?
+		  `,
+				[userId]
+			);
+
+			return result[0]?.count || 0;
+		} catch (error) {
+			console.error('Error al contar seguidores:', error);
+			return 0;
+		}
+	}
+
+	async countFollowing(userId: number): Promise<number> {
+		try {
+			const result: { count: number }[] = await this.dataSource.query(
+				`
+			SELECT COUNT(*) as count
+			FROM user_followers
+			WHERE follower_id = ?
+		  `,
+				[userId]
+			);
+
+			return result[0]?.count || 0;
+		} catch (error) {
+			console.error('Error al contar seguidos:', error);
+			return 0;
+		}
+	}
 }

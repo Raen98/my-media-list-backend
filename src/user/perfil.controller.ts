@@ -101,7 +101,14 @@ export class PerfilController {
 		// Obtener total de amigos
 		const totalAmigos = await this.userRepository.countFriends(userId);
 
-		// Verificar si el usuario actual sigue al usuario del perfil (lógica simplificada)
+		// Obtener total de seguidores
+		const totalSeguidores =
+			await this.userRepository.countFollowers(userId);
+
+		// Obtener total de seguidos
+		const totalSeguidos = await this.userRepository.countFollowing(userId);
+
+		// Verificar si el usuario actual sigue al usuario del perfil
 		const siguiendo = esMiPerfil
 			? false
 			: await this.userRepository.checkFollowing(req.user.id, userId);
@@ -115,6 +122,8 @@ export class PerfilController {
 			bio: user.bio || '',
 			totalContenidos,
 			totalAmigos,
+			totalSeguidores,
+			totalSeguidos,
 			avatar: user.avatar || 'avatar1',
 			esMiPerfil,
 			siguiendo,
