@@ -5,9 +5,10 @@ import { UserItemRepository } from '../repositories/user-item.repository';
 import { UserItemsController } from './user-items.controller';
 import { UserItemsService } from './user-items.service';
 import { DataSource } from 'typeorm';
+import { ApisModule } from '../apis/apis.module';
 
 @Module({
-	imports: [TypeOrmModule.forFeature([UserItem])],
+	imports: [TypeOrmModule.forFeature([UserItem]), ApisModule],
 	controllers: [UserItemsController],
 	providers: [
 		UserItemsService,
@@ -18,5 +19,6 @@ import { DataSource } from 'typeorm';
 			inject: [DataSource],
 		},
 	],
+	exports: [UserItemsService],
 })
 export class UserItemsModule {}

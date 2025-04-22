@@ -8,8 +8,9 @@ import {
 	Delete,
 	Param,
 	ParseIntPipe,
+	Get,
 } from '@nestjs/common';
-import { UserItemsService } from './user-items.service';
+import { UserItemsService, EnrichedContent } from './user-items.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthRequest } from 'src/auth/auth-request.interface';
 import {
@@ -26,6 +27,35 @@ import { AddUserItemDto, UpdateUserItemDto } from './dto/user-item.dto';
 @Controller('user-items')
 export class UserItemsController {
 	constructor(private readonly userItemsService: UserItemsService) {}
+
+	/**
+	 *  GET /user-items/coleccion/:userId
+	 * Obtiene la colección completa de un usuario específico con detalles enriquecidos.
+	 */
+	@UseGuards(AuthGuard)
+	@Get('coleccion/:userId')
+	@ApiOperation({
+		summary: 'Obtener la colección completa de un usuario específico',
+	})
+	@ApiParam({
+		name: 'userId',
+		type: Number,
+		description: 'ID del usuario cuya colección se quiere obtener',
+	})
+	@ApiResponse({
+		status: 200,
+		description: 'Colección del usuario con detalles',
+	})
+	@ApiResponse({ status: 401, description: 'No autorizado' })
+	@ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+	async getUserCollection(
+		@Param('userId', ParseIntPipe) userId: number,
+		@Req() req: AuthRequest
+	): Promise<EnrichedContent[]> {
+		if (!req.user)
+			throw new Error('Token inválido o usuario no autenticado');
+		return this.userItemsService.getUserCollection(userId);
+	}
 
 	/**
 	 *  POST /user-items
