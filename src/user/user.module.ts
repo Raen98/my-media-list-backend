@@ -4,6 +4,7 @@ import { User } from '../entities/user.entity';
 import { UserItem } from '../entities/user-item.entity';
 import { PerfilController } from './perfil.controller';
 import { ActividadController } from './actividad.controller';
+import { ActividadSeguidosController } from './actividad-seguidos.controller';
 import { AvatarController } from './avatar.controller';
 import { UserRepository } from '../repositories/user.repository';
 import { UserItemRepository } from 'src/repositories/user-item.repository';
@@ -12,7 +13,12 @@ import { ApisModule } from '../apis/apis.module';
 
 @Module({
 	imports: [TypeOrmModule.forFeature([User, UserItem]), ApisModule],
-	controllers: [PerfilController, ActividadController, AvatarController],
+	controllers: [
+		PerfilController,
+		ActividadController,
+		AvatarController,
+		ActividadSeguidosController, // Añadimos el nuevo controlador
+	],
 	providers: [
 		{
 			provide: UserRepository,

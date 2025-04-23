@@ -31,6 +31,17 @@ export interface EnrichedContent {
 	amigos?: { id: string; estado: string; imagen_id?: string }[];
 }
 
+// Interfaz para el contenido simplificado
+export interface SimplifiedContent {
+	id: number;
+	id_api: string;
+	tipo: 'P' | 'S' | 'L' | 'V';
+	titulo: string;
+	autor: string;
+	genero: string[];
+	imagen: string | null;
+	estado: string; // Solo el estado, no el objeto item completo
+}
 @Injectable()
 export class UserItemsService {
 	constructor(
@@ -207,11 +218,11 @@ export class UserItemsService {
 	}
 
 	/**
-	 * Obtiene la colección completa de un usuario específico con todos los detalles
+	 * Obtiene la colección completa de un usuario específico con los campos solicitados
 	 * @param userId ID del usuario
-	 * @returns Colección completa con detalles enriquecidos desde las APIs externas
+	 * @returns Colección simplificada según requerimientos del frontend
 	 */
-	async getUserCollection(userId: number): Promise<EnrichedContent[]> {
+	async getUserCollection(userId: number): Promise<SimplifiedContent[]> {
 		try {
 			// Obtener todos los items del usuario sin filtros
 			const userItems = await this.userItemsRepo.find({
@@ -220,22 +231,15 @@ export class UserItemsService {
 				relations: ['user'],
 			});
 
-			// Enriquecer con datos de las APIs externas
-			const enrichedItems = await Promise.all(
+			// Enriquecer con datos de las APIs externas pero simplificando la respuesta
+			const simplifiedItems = await Promise.all(
 				userItems.map(async (item) => {
-					// Objeto para almacenar los detalles del contenido con tipos específicos
 					interface ContentDetails {
 						titulo?: string;
 						autor?: string;
 						genero?: string[];
 						imagen?: string | null;
-						fechaLanzamiento?: string;
-						descripcion?: string;
-						duracion?: number | string;
-						temporadas?: number;
-						episodios?: number;
-						paginas?: number | null;
-						valoracion?: number;
+						// Omitimos otros campos que no necesitamos
 					}
 
 					let contentDetails: ContentDetails = {};
@@ -263,8 +267,8 @@ export class UserItemsService {
 							);
 						}
 
-						// Construir objeto de respuesta con los detalles
-						const enrichedItem: EnrichedContent = {
+						// Construir objeto de respuesta simplificado
+						const simplifiedItem: SimplifiedContent = {
 							id: item.id,
 							id_api: item.id_api,
 							tipo: item.tipo,
@@ -272,34 +276,17 @@ export class UserItemsService {
 							autor: contentDetails.autor || 'Desconocido',
 							genero: contentDetails.genero || ['Desconocido'],
 							imagen: contentDetails.imagen || null,
-							fechaLanzamiento:
-								contentDetails.fechaLanzamiento ||
-								'Desconocido',
-							descripcion:
-								contentDetails.descripcion || 'Sin descripción',
-							// Información adicional específica del tipo
-							duracion: contentDetails.duracion,
-							temporadas: contentDetails.temporadas,
-							episodios: contentDetails.episodios,
-							paginas: contentDetails.paginas,
-							valoracion: contentDetails.valoracion,
-							// Información de la relación usuario-item
-							item: {
-								id: item.id.toString(),
-								estado: item.estado,
-							},
-							// Fecha de actualización para ordenar
-							updated_at: item.updated_at,
+							estado: item.estado, // Solo devolvemos el estado, no el objeto item completo
 						};
 
-						return enrichedItem;
+						return simplifiedItem;
 					} catch (error) {
 						console.error(
 							`Error al obtener detalles para ítem ${item.id_api}:`,
 							error
 						);
 						// Devolver información básica en caso de error
-						const fallbackItem: EnrichedContent = {
+						const fallbackItem: SimplifiedContent = {
 							id: item.id,
 							id_api: item.id_api,
 							tipo: item.tipo,
@@ -307,13 +294,7 @@ export class UserItemsService {
 							autor: 'Desconocido',
 							genero: ['Desconocido'],
 							imagen: null,
-							fechaLanzamiento: 'Desconocido',
-							descripcion: 'Sin descripción',
-							item: {
-								id: item.id.toString(),
-								estado: item.estado,
-							},
-							updated_at: item.updated_at,
+							estado: item.estado,
 						};
 
 						return fallbackItem;
@@ -321,12 +302,7 @@ export class UserItemsService {
 				})
 			);
 
-			// Ordenar por fecha de actualización (más reciente primero)
-			return enrichedItems.sort((a, b) => {
-				const dateA = new Date(a.updated_at).getTime();
-				const dateB = new Date(b.updated_at).getTime();
-				return dateB - dateA;
-			});
+			return simplifiedItems;
 		} catch (error) {
 			console.error('Error al obtener colección de usuario:', error);
 			throw error;

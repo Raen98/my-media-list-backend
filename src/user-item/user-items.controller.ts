@@ -10,7 +10,8 @@ import {
 	ParseIntPipe,
 	Get,
 } from '@nestjs/common';
-import { UserItemsService, EnrichedContent } from './user-items.service';
+import { UserItemsService } from './user-items.service';
+import { SimplifiedContent } from './user-items.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthRequest } from 'src/auth/auth-request.interface';
 import {
@@ -51,7 +52,7 @@ export class UserItemsController {
 	async getUserCollection(
 		@Param('userId', ParseIntPipe) userId: number,
 		@Req() req: AuthRequest
-	): Promise<EnrichedContent[]> {
+	): Promise<SimplifiedContent[]> {
 		if (!req.user)
 			throw new Error('Token inválido o usuario no autenticado');
 		return this.userItemsService.getUserCollection(userId);

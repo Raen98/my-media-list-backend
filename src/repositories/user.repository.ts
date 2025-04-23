@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Repository, DataSource } from 'typeorm';
 import { User } from '../entities/user.entity';
+import { UserProfile } from 'src/user/actividad-seguidos.controller'; // Adjust the path as needed
 
 @Injectable()
 export class UserRepository extends Repository<User> {
@@ -8,10 +9,7 @@ export class UserRepository extends Repository<User> {
 		super(User, dataSource.createEntityManager());
 	}
 
-	/**
-	 * Encuentra un perfil de usuario con información básica
-	 */
-	async findUserProfile(userId: number): Promise<any> {
+	async findUserProfile(userId: number): Promise<UserProfile | null> {
 		try {
 			const user = await this.findOne({
 				where: { id: userId },
@@ -37,7 +35,16 @@ export class UserRepository extends Repository<User> {
 				};
 			}
 
-			return user;
+			if (user) {
+				return {
+					id: user.id,
+					name: user.name,
+					email: user.email,
+					created_at: user.created_at,
+					avatar: 'avatar1', // Default avatar if no avatarInfo is found
+				} as UserProfile;
+			}
+			return null;
 		} catch (error) {
 			console.error('Error al buscar perfil de usuario:', error);
 			return null;

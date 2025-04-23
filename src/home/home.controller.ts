@@ -68,7 +68,7 @@ export class HomeController {
 		@Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number
 	) {
 		if (!req.user) {
-			return [];
+			return ['hola'];
 		}
 
 		const userId = req.user.id;
