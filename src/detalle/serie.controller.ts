@@ -56,7 +56,7 @@ export class SerieController {
 			where: { user: { id: user.id }, id_api, tipo: 'S' },
 		});
 
-		const amigos = await this.userItemRepo.obtenerAmigosConItem(
+		const seguidos = await this.userItemRepo.obtenerSeguidosConItem(
 			user.id,
 			id_api,
 			'S'
@@ -67,10 +67,10 @@ export class SerieController {
 			item: userItem
 				? { id: userItem.id, estado: userItem.estado }
 				: null,
-			amigos: amigos.map((a) => ({
-				id: a.id,
-				estado: a.estado,
-				imagen_id: a.imagen_id,
+			seguidos: seguidos.map((s) => ({
+				id: s.id,
+				estado: s.estado,
+				imagen_id: s.imagen_id,
 			})),
 		};
 	}

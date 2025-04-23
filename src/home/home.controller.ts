@@ -73,13 +73,12 @@ export class HomeController {
 
 		const userId = req.user.id;
 
-		// Obtener ítems populares entre amigos
+		// Obtener ítems populares entre seguidos
 		const popularItems: PopularItem[] =
-			await this.userItemRepo.obtenerItemsPopularesEntreAmigos(
+			await this.userItemRepo.obtenerItemsPopularesEntreSeguidos(
 				userId,
 				limit
 			);
-
 		// Enriquecer con detalles de las APIs
 		const enrichedItems = await Promise.all(
 			popularItems.map(async (item) => {

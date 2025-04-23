@@ -45,6 +45,7 @@ export class LibrosController {
 		description: 'Detalles del libro y amigos que lo tienen',
 	})
 	@ApiResponse({ status: 404, description: 'Libro no encontrado' })
+	@Get()
 	async getLibro(@Query('id_api') id_api: string, @Req() req: AuthRequest) {
 		const user = req.user;
 		if (!user) throw new Error('Usuario no autenticado');
@@ -52,7 +53,12 @@ export class LibrosController {
 		const libro = await this.googleBooksService.buscarPorId(id_api);
 		if (!libro) throw new NotFoundException('Libro no encontrado');
 
-		const amigos = await this.userItemRepo.obtenerAmigosConItem(
+		// Comprobamos si el usuario lo tiene en su lista
+		const userItem = await this.userItemRepo.findOne({
+			where: { user: { id: user.id }, id_api, tipo: 'L' },
+		});
+
+		const seguidos = await this.userItemRepo.obtenerSeguidosConItem(
 			user.id,
 			id_api,
 			'L'
@@ -60,7 +66,14 @@ export class LibrosController {
 
 		return {
 			...libro,
-			amigos,
+			item: userItem
+				? { id: userItem.id, estado: userItem.estado }
+				: null,
+			seguidos: seguidos.map((s) => ({
+				id: s.id,
+				estado: s.estado,
+				imagen_id: s.imagen_id,
+			})),
 		};
 	}
 }

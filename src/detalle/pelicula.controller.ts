@@ -61,8 +61,8 @@ export class PeliculaController {
 			where: { user: { id: user.id }, id_api, tipo: 'P' },
 		});
 
-		// Obtenemos los amigos que también la tienen
-		const amigos = await this.userItemRepo.obtenerAmigosConItem(
+		// Obtenemos los seguidos que también la tienen
+		const seguidos = await this.userItemRepo.obtenerSeguidosConItem(
 			user.id,
 			id_api,
 			'P'
@@ -73,10 +73,10 @@ export class PeliculaController {
 			item: userItem
 				? { id: userItem.id, estado: userItem.estado }
 				: null,
-			amigos: amigos.map((a) => ({
-				id: a.id,
-				estado: a.estado,
-				imagen_id: a.imagen_id,
+			seguidos: seguidos.map((s) => ({
+				id: s.id,
+				estado: s.estado,
+				imagen_id: s.imagen_id,
 			})),
 		};
 	}

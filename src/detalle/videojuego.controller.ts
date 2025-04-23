@@ -63,9 +63,8 @@ export class VideojuegoController {
 			where: { user: { id: user.id }, id_api, tipo: 'V' },
 		});
 
-		// Obtenemos los amigos que también lo tienen
-		// y su estado (si lo tienen o no)
-		const amigos = await this.userItemRepo.obtenerAmigosConItem(
+		// Obtenemos los seguidos que también lo tienen
+		const seguidos = await this.userItemRepo.obtenerSeguidosConItem(
 			user.id,
 			id_api,
 			'V'
@@ -76,10 +75,10 @@ export class VideojuegoController {
 			item: userItem
 				? { id: userItem.id, estado: userItem.estado }
 				: null,
-			amigos: amigos.map((a) => ({
-				id: a.id,
-				estado: a.estado,
-				imagen_id: a.imagen_id,
+			seguidos: seguidos.map((s) => ({
+				id: s.id,
+				estado: s.estado,
+				imagen_id: s.imagen_id,
 			})),
 		};
 	}

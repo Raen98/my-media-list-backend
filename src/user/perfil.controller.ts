@@ -98,9 +98,6 @@ export class PerfilController {
 			where: { user: { id: userId } },
 		});
 
-		// Obtener total de amigos
-		const totalAmigos = await this.userRepository.countFriends(userId);
-
 		// Obtener total de seguidores
 		const totalSeguidores =
 			await this.userRepository.countFollowers(userId);
@@ -121,7 +118,6 @@ export class PerfilController {
 			fechaRegistro: user.created_at,
 			bio: user.bio || '',
 			totalContenidos,
-			totalAmigos,
 			totalSeguidores,
 			totalSeguidos,
 			avatar: user.avatar || 'avatar1',
