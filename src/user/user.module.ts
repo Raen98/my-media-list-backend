@@ -1,3 +1,4 @@
+// Actualizar en src/user/user.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
@@ -6,6 +7,7 @@ import { PerfilController } from './perfil.controller';
 import { ActividadController } from './actividad.controller';
 import { ActividadSeguidosController } from './actividad-seguidos.controller';
 import { AvatarController } from './avatar.controller';
+import { SearchUserController } from './search-user.controller'; // Importar el nuevo controlador
 import { UserRepository } from '../repositories/user.repository';
 import { UserItemRepository } from 'src/repositories/user-item.repository';
 import { DataSource } from 'typeorm';
@@ -17,7 +19,8 @@ import { ApisModule } from '../apis/apis.module';
 		PerfilController,
 		ActividadController,
 		AvatarController,
-		ActividadSeguidosController, // Añadimos el nuevo controlador
+		ActividadSeguidosController,
+		SearchUserController, // Añadir el nuevo controlador
 	],
 	providers: [
 		{

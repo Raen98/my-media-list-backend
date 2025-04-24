@@ -198,4 +198,26 @@ export class UserRepository extends Repository<User> {
 			return 0;
 		}
 	}
+
+	// Añadir en src/repositories/user.repository.ts
+
+	async searchUsers(query: string): Promise<User[]> {
+		try {
+			// Buscar usuarios cuyo nombre o nombre de usuario contenga la consulta
+			return this.createQueryBuilder('user')
+				.where('user.name LIKE :query', { query: `%${query}%` })
+				.orWhere('user.email LIKE :query', { query: `%${query}%` })
+				.select([
+					'user.id',
+					'user.name',
+					'user.email',
+					'user.created_at',
+				])
+				.take(10) // Limitar resultados
+				.getMany();
+		} catch (error) {
+			console.error('Error al buscar usuarios:', error);
+			return [];
+		}
+	}
 }
