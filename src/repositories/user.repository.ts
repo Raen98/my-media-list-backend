@@ -1,7 +1,25 @@
+// src/repositories/user.repository.ts
 import { Injectable } from '@nestjs/common';
 import { Repository, DataSource } from 'typeorm';
 import { User } from '../entities/user.entity';
-import { UserProfile } from 'src/user/actividad-seguidos.controller'; // Adjust the path as needed
+import { UserProfile } from 'src/user/actividad-seguidos.controller';
+
+interface FollowerUser {
+	id: number;
+	name: string;
+	email: string;
+	username?: string;
+	avatar_id?: string;
+	created_at: Date;
+}
+
+interface LastActivity {
+	id: number;
+	id_api: string;
+	tipo: string;
+	estado: string;
+	updated_at: string;
+}
 
 @Injectable()
 export class UserRepository extends Repository<User> {
@@ -199,8 +217,6 @@ export class UserRepository extends Repository<User> {
 		}
 	}
 
-	// Añadir en src/repositories/user.repository.ts
-
 	async searchUsers(query: string): Promise<User[]> {
 		try {
 			// Buscar usuarios cuyo nombre o nombre de usuario contenga la consulta
@@ -218,6 +234,129 @@ export class UserRepository extends Repository<User> {
 		} catch (error) {
 			console.error('Error al buscar usuarios:', error);
 			return [];
+		}
+	}
+
+	/**
+	 * Obtiene la lista de seguidores de un usuario
+	 * @param userId ID del usuario
+	 * @param page Número de página (empieza en 1)
+	 * @param limit Elementos por página
+	 * @returns Lista de usuarios que siguen al usuario
+	 */
+	async getFollowers(
+		userId: number,
+		page: number = 1,
+		limit: number = 10
+	): Promise<FollowerUser[]> {
+		try {
+			const offset = (page - 1) * limit;
+
+			const result: FollowerUser[] = await this.dataSource.query(
+				`
+				SELECT 
+					u.id, 
+					u.name, 
+					u.email, 
+					u.created_at,
+					u.avatar_id
+				FROM 
+					users u
+				INNER JOIN 
+					user_followers uf ON u.id = uf.follower_id
+				WHERE 
+					uf.followed_id = ?
+				ORDER BY 
+					u.name ASC
+				LIMIT ? OFFSET ?
+				`,
+				[userId, limit, offset]
+			);
+
+			return result;
+		} catch (error) {
+			console.error('Error al obtener seguidores:', error);
+			return [];
+		}
+	}
+
+	/**
+	 * Obtiene la lista de usuarios a los que sigue un usuario
+	 * @param userId ID del usuario
+	 * @param page Número de página (empieza en 1)
+	 * @param limit Elementos por página
+	 * @returns Lista de usuarios seguidos por el usuario
+	 */
+	async getFollowing(
+		userId: number,
+		page: number = 1,
+		limit: number = 10
+	): Promise<FollowerUser[]> {
+		try {
+			const offset = (page - 1) * limit;
+
+			const result: FollowerUser[] = await this.dataSource.query(
+				`
+				SELECT 
+					u.id, 
+					u.name, 
+					u.email, 
+					u.created_at,
+					u.avatar_id
+				FROM 
+					users u
+				INNER JOIN 
+					user_followers uf ON u.id = uf.followed_id
+				WHERE 
+					uf.follower_id = ?
+				ORDER BY 
+					u.name ASC
+				LIMIT ? OFFSET ?
+				`,
+				[userId, limit, offset]
+			);
+
+			return result;
+		} catch (error) {
+			console.error('Error al obtener usuarios seguidos:', error);
+			return [];
+		}
+	}
+
+	/**
+	 * Obtiene la última actividad de un usuario
+	 * @param userId ID del usuario
+	 * @returns Objeto con la información de la última actividad
+	 */
+	async getLastActivity(userId: number): Promise<LastActivity | null> {
+		try {
+			const userItems: LastActivity[] = await this.dataSource.query(
+				`
+			  SELECT 
+				ui.id,
+				ui.id_api,
+				ui.tipo,
+				ui.estado,
+				ui.updated_at
+			  FROM 
+				user_items ui
+			  WHERE 
+				ui.user_id = ?
+			  ORDER BY 
+				ui.updated_at DESC
+			  LIMIT 1
+			  `,
+				[userId]
+			);
+
+			if (userItems.length === 0) {
+				return null;
+			}
+
+			return userItems[0];
+		} catch (error) {
+			console.error('Error al obtener última actividad:', error);
+			return null;
 		}
 	}
 }
