@@ -174,10 +174,8 @@ export class SeguidorController {
 				return {
 					id: seguidor.id,
 					nombre: seguidor.name,
-					username:
-						seguidor.username ||
-						seguidor.name.toLowerCase().replace(/\s+/g, ''),
-					avatar: seguidor.avatar_id || 'avatar1',
+					username: seguidor.username || 'usuario_desconocido', // Usar un valor predeterminado si el username es undefined
+					avatar: seguidor.avatar_id || 'avatar1', // Solo usar 'avatar1' si no hay avatar_id
 					ultimaActividad: ultimaActividad
 						? {
 								tipo: ultimaActividad.tipo,
@@ -315,10 +313,8 @@ export class SeguidorController {
 				return {
 					id: seguido.id,
 					nombre: seguido.name,
-					username:
-						seguido.username ||
-						seguido.name.toLowerCase().replace(/\s+/g, ''),
-					avatar: seguido.avatar_id || 'avatar1',
+					username: seguido.username || 'usuario_desconocido', // Usar un valor predeterminado si el username es undefined
+					avatar: seguido.avatar_id || 'avatar1', // Solo usar 'avatar1' si no hay avatar_id
 					ultimaActividad: ultimaActividad
 						? {
 								tipo: ultimaActividad.tipo,

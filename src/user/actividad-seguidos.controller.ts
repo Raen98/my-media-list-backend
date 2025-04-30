@@ -89,7 +89,6 @@ export class ActividadSeguidosController {
 
 		const userId = req.user.id;
 
-		// 1. Obtenemos la actividad reciente de los usuarios que sigue
 		const actividadReciente =
 			await this.userItemRepo.obtenerActividadSeguidos(
 				userId,
@@ -97,7 +96,6 @@ export class ActividadSeguidosController {
 				limite
 			);
 
-		// 2. Procesamos y enriquecemos cada entrada de actividad
 		const actividadProcesada = await Promise.all(
 			actividadReciente.map(
 				async (actividad: {

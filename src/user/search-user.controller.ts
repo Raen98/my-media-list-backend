@@ -62,8 +62,8 @@ export class SearchUserController {
 				return {
 					id: user.id,
 					nombre: user.name,
-					username: user.username, // Ahora usamos el username real
-					avatar: user.avatar_id || 'avatar1', // Usamos el avatar_id si existe
+					username: user.username,
+					avatar: user.avatar_id || 'avatar1',
 					siguiendo: siguiendo,
 				};
 			})

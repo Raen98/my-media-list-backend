@@ -192,7 +192,7 @@ export class PerfilController {
 
 		const esMiPerfil = userId === req.user.id;
 
-		// Buscar el usuario en la base de datos
+		// Buscar el usuario en la base de datos - asegurarse de seleccionar username y avatar_id
 		const user = await this.userRepository.findOne({
 			where: { id: userId },
 			select: [
@@ -230,8 +230,7 @@ export class PerfilController {
 		return {
 			id: user.id.toString(),
 			nombre: user.name,
-			username:
-				user.username || user.name.toLowerCase().replace(/\s+/g, ''),
+			username: user.username,
 			fechaRegistro: user.created_at,
 			bio: user.bio || '',
 			totalContenidos,

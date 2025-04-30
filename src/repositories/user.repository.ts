@@ -8,7 +8,7 @@ interface FollowerUser {
 	id: number;
 	name: string;
 	email: string;
-	username?: string;
+	username: string;
 	avatar_id?: string;
 	created_at: Date;
 }
@@ -227,9 +227,9 @@ export class UserRepository extends Repository<User> {
 				.select([
 					'user.id',
 					'user.name',
-					'user.username', // Incluimos username en los resultados
+					'user.username',
 					'user.email',
-					'user.avatar_id', // Incluimos avatar_id
+					'user.avatar_id',
 					'user.created_at',
 				])
 				.take(10) // Limitar resultados
@@ -262,6 +262,7 @@ export class UserRepository extends Repository<User> {
 					u.name, 
 					u.email, 
 					u.created_at,
+					u.username,  -- Añadir username
 					u.avatar_id
 				FROM 
 					users u
@@ -305,6 +306,7 @@ export class UserRepository extends Repository<User> {
 					u.name, 
 					u.email, 
 					u.created_at,
+					u.username,  -- Añadir username
 					u.avatar_id
 				FROM 
 					users u
