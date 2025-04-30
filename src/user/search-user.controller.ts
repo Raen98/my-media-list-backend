@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { UserRepository } from '../repositories/user.repository';
 import {
@@ -9,6 +9,7 @@ import {
 	ApiResponse,
 } from '@nestjs/swagger';
 import { SearchUserDto } from './dto/search-user.dto';
+import { AuthRequest } from '../auth/auth-request.interface';
 
 @ApiTags('Usuarios')
 @ApiBearerAuth()
@@ -19,7 +20,7 @@ export class SearchUserController {
 
 	/**
 	 * GET /usuarios/buscar?query=...
-	 * Busca usuarios por nombre o username
+	 * Busca usuarios por nombre o username y devuelve si el usuario está siendo seguido
 	 */
 	@Get('buscar')
 	@ApiOperation({ summary: 'Buscar usuarios por nombre o username' })
@@ -32,17 +33,42 @@ export class SearchUserController {
 		status: 200,
 		description: 'Lista de usuarios que coinciden con la búsqueda',
 	})
-	async searchUsers(@Query() searchUserDto: SearchUserDto) {
+	async searchUsers(
+		@Query() searchUserDto: SearchUserDto,
+		@Req() req: AuthRequest
+	) {
+		if (!req.user) {
+			return [];
+		}
+
+		const currentUserId = req.user.id;
 		const users = await this.userRepository.searchUsers(
 			searchUserDto.query
 		);
 
-		// Transformar los resultados para el frontend
-		return users.map((user) => ({
-			id: user.id,
-			nombre: user.name,
-			username: user.email.split('@')[0], // Si no tienes campo username, podemos usar esto como alternativa
-			avatar: 'avatar1', // Valor por defecto, puedes ajustarlo según tu lógica
-		}));
+		// Transformar los resultados para el frontend y añadir campo siguiendo
+		const usersWithFollowStatus = await Promise.all(
+			users.map(async (user) => {
+				if (user.id === currentUserId) {
+					return null;
+				}
+
+				const siguiendo = await this.userRepository.checkFollowing(
+					currentUserId,
+					user.id
+				);
+
+				return {
+					id: user.id,
+					nombre: user.name,
+					username: user.email.split('@')[0],
+					avatar: 'avatar1',
+					siguiendo: siguiendo,
+				};
+			})
+		);
+
+		// Filtrar usuarios nulos (que serían el propio usuario autenticado)
+		return usersWithFollowStatus.filter((user) => user !== null);
 	}
 }
