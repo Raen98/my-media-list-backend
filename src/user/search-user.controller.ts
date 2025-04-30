@@ -1,3 +1,4 @@
+// src/user/search-user.controller.ts
 import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { UserRepository } from '../repositories/user.repository';
@@ -61,8 +62,8 @@ export class SearchUserController {
 				return {
 					id: user.id,
 					nombre: user.name,
-					username: user.email.split('@')[0],
-					avatar: 'avatar1',
+					username: user.username, // Ahora usamos el username real
+					avatar: user.avatar_id || 'avatar1', // Usamos el avatar_id si existe
 					siguiendo: siguiendo,
 				};
 			})

@@ -219,14 +219,17 @@ export class UserRepository extends Repository<User> {
 
 	async searchUsers(query: string): Promise<User[]> {
 		try {
-			// Buscar usuarios cuyo nombre o nombre de usuario contenga la consulta
+			// Buscar usuarios cuyo nombre o username contenga la consulta
 			return this.createQueryBuilder('user')
 				.where('user.name LIKE :query', { query: `%${query}%` })
+				.orWhere('user.username LIKE :query', { query: `%${query}%` }) // Añadimos búsqueda por username
 				.orWhere('user.email LIKE :query', { query: `%${query}%` })
 				.select([
 					'user.id',
 					'user.name',
+					'user.username', // Incluimos username en los resultados
 					'user.email',
+					'user.avatar_id', // Incluimos avatar_id
 					'user.created_at',
 				])
 				.take(10) // Limitar resultados

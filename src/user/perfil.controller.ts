@@ -1,19 +1,21 @@
+// src/user/perfil.controller.ts
 import {
 	Controller,
 	Get,
+	Put,
+	Post,
+	Body,
 	Param,
 	UseGuards,
 	Req,
 	NotFoundException,
 	ParseIntPipe,
-	Post,
-	Put,
-	Body,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthRequest } from '../auth/auth-request.interface';
 import { UserRepository } from '../repositories/user.repository';
 import { UserItemRepository } from '../repositories/user-item.repository';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import {
 	ApiTags,
 	ApiBearerAuth,
@@ -45,7 +47,11 @@ export class PerfilController {
 	})
 	@ApiResponse({ status: 404, description: 'Usuario no encontrado' })
 	async getPerfilPropio(@Req() req: AuthRequest) {
-		return this.getPerfil(null, req);
+		if (!req.user) {
+			throw new NotFoundException('Usuario no autenticado');
+		}
+
+		return this.getPerfil(req.user.id, req);
 	}
 
 	/**
@@ -64,73 +70,69 @@ export class PerfilController {
 		description: 'Perfil de usuario',
 	})
 	@ApiResponse({ status: 404, description: 'Usuario no encontrado' })
-	async getPerfilById(@Param('id') id: string, @Req() req: AuthRequest) {
+	async getPerfilById(
+		@Param('id', ParseIntPipe) id: number,
+		@Req() req: AuthRequest
+	) {
 		return this.getPerfil(id, req);
 	}
 
 	/**
-	 * Método interno para obtener perfil
+	 * PUT /perfil
+	 * Actualiza el perfil del usuario autenticado.
 	 */
-	private async getPerfil(id: string | null, req: AuthRequest) {
+	@Put()
+	@ApiOperation({ summary: 'Actualizar perfil completo' })
+	@ApiBody({ type: UpdateProfileDto })
+	@ApiResponse({
+		status: 200,
+		description: 'Perfil actualizado correctamente',
+	})
+	@ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+	async updateProfile(
+		@Body() updateProfileDto: UpdateProfileDto,
+		@Req() req: AuthRequest
+	) {
 		if (!req.user) {
 			throw new NotFoundException('Usuario no autenticado');
 		}
 
-		const userId = id ? parseInt(id) : req.user.id;
-		const esMiPerfil = userId === req.user.id;
+		const userId = req.user.id;
 
-		// Buscar el usuario en la base de datos
-		const user = (await this.userRepository.findUserProfile(userId)) as {
-			id: number;
-			name: string;
-			username?: string;
-			created_at: Date;
-			avatar?: string;
-			bio?: string;
-		} | null;
-
+		// Verificar que el usuario existe
+		const user = await this.userRepository.findOne({
+			where: { id: userId },
+		});
 		if (!user) {
 			throw new NotFoundException('Usuario no encontrado');
 		}
 
-		// Obtener total de contenidos del usuario
-		const totalContenidos = await this.userItemRepository.count({
-			where: { user: { id: userId } },
-		});
+		// Actualizar solo los campos proporcionados
+		if (updateProfileDto.name) user.name = updateProfileDto.name;
+		if (updateProfileDto.bio) user.bio = updateProfileDto.bio;
+		if (updateProfileDto.avatar_id)
+			user.avatar_id = updateProfileDto.avatar_id;
 
-		// Obtener total de seguidores
-		const totalSeguidores =
-			await this.userRepository.countFollowers(userId);
-
-		// Obtener total de seguidos
-		const totalSeguidos = await this.userRepository.countFollowing(userId);
-
-		// Verificar si el usuario actual sigue al usuario del perfil
-		const siguiendo = esMiPerfil
-			? false
-			: await this.userRepository.checkFollowing(req.user.id, userId);
+		// Guardar los cambios
+		await this.userRepository.save(user);
 
 		return {
-			id: user?.id.toString(),
-			nombre: user.name,
-			username:
-				user.username || user.name.toLowerCase().replace(/\s+/g, ''),
-			fechaRegistro: user.created_at,
-			bio: user.bio || '',
-			totalContenidos,
-			totalSeguidores,
-			totalSeguidos,
-			avatar: user.avatar || 'avatar1',
-			esMiPerfil,
-			siguiendo,
+			message: 'Perfil actualizado correctamente',
+			user: {
+				id: user.id,
+				name: user.name,
+				username: user.username,
+				bio: user.bio,
+				avatar_id: user.avatar_id,
+			},
 		};
 	}
 
 	/**
-	 * POST /usuario/toggle-follow/:id
+	 * POST /perfil/toggle-follow/:id
 	 * Seguir o dejar de seguir a un usuario
 	 */
-	@Post('/usuario/toggle-follow/:id')
+	@Post('toggle-follow/:id')
 	@ApiOperation({ summary: 'Seguir o dejar de seguir a un usuario' })
 	@ApiParam({
 		name: 'id',
@@ -180,32 +182,64 @@ export class PerfilController {
 		}
 	}
 
-	@Put('bio')
-	@ApiOperation({ summary: 'Actualizar biografía del usuario' })
-	@ApiBody({
-		schema: {
-			properties: {
-				bio: {
-					type: 'string',
-					example: 'Me gusta el cine y los videojuegos',
-				},
-			},
-		},
-	})
-	@ApiResponse({
-		status: 200,
-		description: 'Biografía actualizada correctamente',
-	})
-	async updateBio(@Body('bio') bio: string, @Req() req: AuthRequest) {
+	/**
+	 * Método privado para obtener los detalles del perfil
+	 */
+	private async getPerfil(userId: number, req: AuthRequest) {
 		if (!req.user) {
 			throw new NotFoundException('Usuario no autenticado');
 		}
 
-		await this.userRepository.update(req.user.id, { bio });
+		const esMiPerfil = userId === req.user.id;
+
+		// Buscar el usuario en la base de datos
+		const user = await this.userRepository.findOne({
+			where: { id: userId },
+			select: [
+				'id',
+				'name',
+				'username',
+				'email',
+				'bio',
+				'avatar_id',
+				'created_at',
+			],
+		});
+
+		if (!user) {
+			throw new NotFoundException('Usuario no encontrado');
+		}
+
+		// Obtener total de contenidos del usuario
+		const totalContenidos = await this.userItemRepository.count({
+			where: { user: { id: userId } },
+		});
+
+		// Obtener total de seguidores
+		const totalSeguidores =
+			await this.userRepository.countFollowers(userId);
+
+		// Obtener total de seguidos
+		const totalSeguidos = await this.userRepository.countFollowing(userId);
+
+		// Verificar si el usuario actual sigue al usuario del perfil
+		const siguiendo = esMiPerfil
+			? false
+			: await this.userRepository.checkFollowing(req.user.id, userId);
 
 		return {
-			message: 'Biografía actualizada correctamente',
-			bio,
+			id: user.id.toString(),
+			nombre: user.name,
+			username:
+				user.username || user.name.toLowerCase().replace(/\s+/g, ''),
+			fechaRegistro: user.created_at,
+			bio: user.bio || '',
+			totalContenidos,
+			totalSeguidores,
+			totalSeguidos,
+			avatar: user.avatar_id || 'avatar1',
+			esMiPerfil,
+			siguiendo,
 		};
 	}
 }

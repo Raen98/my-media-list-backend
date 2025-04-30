@@ -21,21 +21,27 @@ export class AuthService {
 	async register(
 		email: string,
 		password: string,
-		name: string
+		name: string,
+		username: string
 	): Promise<{ message: string }> {
 		try {
-			const existingMail = await this.usersRepository.findOneBy({
+			// Verificar email único
+			const existingEmail = await this.usersRepository.findOneBy({
 				email,
 			});
-			if (existingMail) {
+			if (existingEmail) {
 				return { message: 'email' };
 			}
-			const existingUser = await this.usersRepository.findOneBy({ name });
-			if (existingUser) {
-				return { message: 'user' };
+
+			// Verificar username único
+			const existingUsername = await this.usersRepository.findOneBy({
+				username,
+			});
+			if (existingUsername) {
+				return { message: 'username' };
 			}
 
-			if (password.length < 0) {
+			if (password.length < 8) {
 				return { message: 'password' };
 			}
 
@@ -45,7 +51,10 @@ export class AuthService {
 				email,
 				password: hashedPassword,
 				name,
+				username,
+				avatar_id: 'avatar1', // Avatar por defecto
 			});
+
 			await this.usersRepository.save(user);
 			return { message: '' };
 		} catch (error) {

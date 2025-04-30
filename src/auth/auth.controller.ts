@@ -32,10 +32,11 @@ export class AuthController {
 			type: 'object',
 			properties: {
 				email: { type: 'string', example: 'ejemplo@email.com' },
+				username: { type: 'string', example: 'usuario123' },
 				password: { type: 'string', example: '12345678' },
-				name: { type: 'string', example: 'UsuarioNuevo' },
+				name: { type: 'string', example: 'Nombre Completo' },
 			},
-			required: ['email', 'password', 'name'],
+			required: ['email', 'username', 'password', 'name'],
 		},
 	})
 	@ApiResponse({
@@ -44,16 +45,16 @@ export class AuthController {
 	})
 	@ApiResponse({
 		status: 400,
-		description: 'Error de validación o email existente',
+		description: 'Error de validación, email o username existente',
 	})
 	async register(
 		@Body('email') email: string,
 		@Body('password') password: string,
-		@Body('name') name: string
+		@Body('name') name: string,
+		@Body('username') username: string
 	): Promise<{ message: string }> {
-		return this.authService.register(email, password, name);
+		return this.authService.register(email, password, name, username);
 	}
-
 	@Post('login')
 	@ApiOperation({ summary: 'Iniciar sesión con email y contraseña' })
 	@ApiBody({
