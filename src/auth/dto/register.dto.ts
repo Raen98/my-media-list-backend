@@ -1,5 +1,11 @@
 // src/auth/dto/register.dto.ts
-import { IsEmail, IsString, MinLength, Matches } from 'class-validator';
+import {
+	IsEmail,
+	IsString,
+	MinLength,
+	Matches,
+	IsOptional,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -37,4 +43,23 @@ export class RegisterDto {
 			'La contraseña debe incluir al menos una letra mayúscula y un número',
 	})
 	password: string;
+
+	@ApiProperty({
+		example: 'Me gusta el cine y los videojuegos...',
+		description: 'Biografía o descripción del usuario',
+		required: false,
+	})
+	@IsOptional()
+	@IsString()
+	bio?: string;
+
+	@ApiProperty({
+		example: 'avatar3',
+		description: 'ID del avatar seleccionado',
+		required: false,
+		default: 'avatar1',
+	})
+	@IsOptional()
+	@IsString()
+	avatar_id?: string;
 }

@@ -19,6 +19,7 @@ import { AuthGuard } from './auth.guard';
 import { AuthRequest } from './auth-request.interface';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
+import { RegisterDto } from './dto/register.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -27,18 +28,7 @@ export class AuthController {
 
 	@Post('register')
 	@ApiOperation({ summary: 'Registrar un nuevo usuario' })
-	@ApiBody({
-		schema: {
-			type: 'object',
-			properties: {
-				email: { type: 'string', example: 'ejemplo@email.com' },
-				username: { type: 'string', example: 'usuario123' },
-				password: { type: 'string', example: '12345678' },
-				name: { type: 'string', example: 'Nombre Completo' },
-			},
-			required: ['email', 'username', 'password', 'name'],
-		},
-	})
+	@ApiBody({ type: RegisterDto })
 	@ApiResponse({
 		status: 201,
 		description: 'Usuario registrado correctamente',
@@ -48,13 +38,11 @@ export class AuthController {
 		description: 'Error de validación, email o username existente',
 	})
 	async register(
-		@Body('email') email: string,
-		@Body('password') password: string,
-		@Body('name') name: string,
-		@Body('username') username: string
+		@Body() registerDto: RegisterDto
 	): Promise<{ message: string }> {
-		return this.authService.register(email, password, name, username);
+		return this.authService.register(registerDto);
 	}
+
 	@Post('login')
 	@ApiOperation({ summary: 'Iniciar sesión con email y contraseña' })
 	@ApiBody({

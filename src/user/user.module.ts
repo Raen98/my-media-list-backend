@@ -11,6 +11,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { UserItemRepository } from '../repositories/user-item.repository';
 import { DataSource } from 'typeorm';
 import { ApisModule } from '../apis/apis.module';
+import { PerfilController } from './perfil.controller';
 
 @Module({
 	imports: [TypeOrmModule.forFeature([User, UserItem]), ApisModule],
@@ -19,6 +20,7 @@ import { ApisModule } from '../apis/apis.module';
 		ActividadSeguidosController,
 		SearchUserController,
 		SeguidorController,
+		PerfilController,
 	],
 	providers: [
 		{

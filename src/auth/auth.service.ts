@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '../entities/user.entity';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,13 +19,11 @@ export class AuthService {
 		private readonly configService: ConfigService
 	) {}
 
-	async register(
-		email: string,
-		password: string,
-		name: string,
-		username: string
-	): Promise<{ message: string }> {
+	async register(registerDto: RegisterDto): Promise<{ message: string }> {
 		try {
+			const { email, password, name, username, bio, avatar_id } =
+				registerDto;
+
 			// Verificar email único
 			const existingEmail = await this.usersRepository.findOneBy({
 				email,
@@ -52,7 +51,8 @@ export class AuthService {
 				password: hashedPassword,
 				name,
 				username,
-				avatar_id: 'avatar1', // Avatar por defecto
+				bio: bio || undefined,
+				avatar_id: avatar_id || 'avatar1',
 			});
 
 			await this.usersRepository.save(user);
