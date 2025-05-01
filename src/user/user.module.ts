@@ -1,9 +1,7 @@
-// src/user/user.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
 import { UserItem } from '../entities/user-item.entity';
-import { ActividadController } from './actividad.controller';
 import { ActividadSeguidosController } from './actividad-seguidos.controller';
 import { SearchUserController } from './search-user.controller';
 import { SeguidorController } from '../social/seguidor.controller';
@@ -16,7 +14,7 @@ import { PerfilController } from './perfil.controller';
 @Module({
 	imports: [TypeOrmModule.forFeature([User, UserItem]), ApisModule],
 	controllers: [
-		ActividadController,
+		// ActividadController ha sido eliminado
 		ActividadSeguidosController,
 		SearchUserController,
 		SeguidorController,

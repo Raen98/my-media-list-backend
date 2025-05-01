@@ -36,27 +36,9 @@ export class PerfilController {
 	) {}
 
 	/**
-	 * GET /perfil
-	 * Obtiene el perfil del usuario autenticado.
-	 */
-	@Get()
-	@ApiOperation({ summary: 'Obtener perfil propio' })
-	@ApiResponse({
-		status: 200,
-		description: 'Perfil del usuario autenticado',
-	})
-	@ApiResponse({ status: 404, description: 'Usuario no encontrado' })
-	async getPerfilPropio(@Req() req: AuthRequest) {
-		if (!req.user) {
-			throw new NotFoundException('Usuario no autenticado');
-		}
-
-		return this.getPerfil(req.user.id, req);
-	}
-
-	/**
 	 * GET /perfil/:id
 	 * Obtiene el perfil de un usuario específico.
+	 * Si el ID corresponde al usuario autenticado, devuelve el perfil propio.
 	 */
 	@Get(':id')
 	@ApiOperation({ summary: 'Obtener perfil de usuario por ID' })
@@ -74,7 +56,59 @@ export class PerfilController {
 		@Param('id', ParseIntPipe) id: number,
 		@Req() req: AuthRequest
 	) {
-		return this.getPerfil(id, req);
+		if (!req.user) {
+			throw new NotFoundException('Usuario no autenticado');
+		}
+
+		const esMiPerfil = id === req.user.id;
+
+		// Buscar el usuario en la base de datos - asegurarse de seleccionar username y avatar_id
+		const user = await this.userRepository.findOne({
+			where: { id: id },
+			select: [
+				'id',
+				'name',
+				'username',
+				'email',
+				'bio',
+				'avatar_id',
+				'created_at',
+			],
+		});
+
+		if (!user) {
+			throw new NotFoundException('Usuario no encontrado');
+		}
+
+		// Obtener total de contenidos del usuario
+		const totalContenidos = await this.userItemRepository.count({
+			where: { user: { id: id } },
+		});
+
+		// Obtener total de seguidores
+		const totalSeguidores = await this.userRepository.countFollowers(id);
+
+		// Obtener total de seguidos
+		const totalSeguidos = await this.userRepository.countFollowing(id);
+
+		// Verificar si el usuario actual sigue al usuario del perfil
+		const siguiendo = esMiPerfil
+			? false
+			: await this.userRepository.checkFollowing(req.user.id, id);
+
+		return {
+			id: user.id.toString(),
+			nombre: user.name,
+			username: user.username,
+			fechaRegistro: user.created_at,
+			bio: user.bio || '',
+			totalContenidos,
+			totalSeguidores,
+			totalSeguidos,
+			avatar: user.avatar_id || 'avatar1',
+			esMiPerfil,
+			siguiendo,
+		};
 	}
 
 	/**
@@ -180,65 +214,5 @@ export class PerfilController {
 			await this.userRepository.followUser(userId, targetUserId);
 			return { siguiendo: true, mensaje: 'Ahora sigues a este usuario' };
 		}
-	}
-
-	/**
-	 * Método privado para obtener los detalles del perfil
-	 */
-	private async getPerfil(userId: number, req: AuthRequest) {
-		if (!req.user) {
-			throw new NotFoundException('Usuario no autenticado');
-		}
-
-		const esMiPerfil = userId === req.user.id;
-
-		// Buscar el usuario en la base de datos - asegurarse de seleccionar username y avatar_id
-		const user = await this.userRepository.findOne({
-			where: { id: userId },
-			select: [
-				'id',
-				'name',
-				'username',
-				'email',
-				'bio',
-				'avatar_id',
-				'created_at',
-			],
-		});
-
-		if (!user) {
-			throw new NotFoundException('Usuario no encontrado');
-		}
-
-		// Obtener total de contenidos del usuario
-		const totalContenidos = await this.userItemRepository.count({
-			where: { user: { id: userId } },
-		});
-
-		// Obtener total de seguidores
-		const totalSeguidores =
-			await this.userRepository.countFollowers(userId);
-
-		// Obtener total de seguidos
-		const totalSeguidos = await this.userRepository.countFollowing(userId);
-
-		// Verificar si el usuario actual sigue al usuario del perfil
-		const siguiendo = esMiPerfil
-			? false
-			: await this.userRepository.checkFollowing(req.user.id, userId);
-
-		return {
-			id: user.id.toString(),
-			nombre: user.name,
-			username: user.username,
-			fechaRegistro: user.created_at,
-			bio: user.bio || '',
-			totalContenidos,
-			totalSeguidores,
-			totalSeguidos,
-			avatar: user.avatar_id || 'avatar1',
-			esMiPerfil,
-			siguiendo,
-		};
 	}
 }

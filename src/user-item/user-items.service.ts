@@ -41,6 +41,8 @@ export interface SimplifiedContent {
 	genero: string[];
 	imagen: string | null;
 	estado: string; // Solo el estado, no el objeto item completo
+	created_at: Date; // Fecha de añadido
+	updated_at: Date; // Fecha de modificación
 }
 @Injectable()
 export class UserItemsService {
@@ -267,7 +269,7 @@ export class UserItemsService {
 							);
 						}
 
-						// Construir objeto de respuesta simplificado
+						// Construir objeto de respuesta simplificado con fechas
 						const simplifiedItem: SimplifiedContent = {
 							id: item.id,
 							id_api: item.id_api,
@@ -277,6 +279,8 @@ export class UserItemsService {
 							genero: contentDetails.genero || ['Desconocido'],
 							imagen: contentDetails.imagen || null,
 							estado: item.estado, // Solo devolvemos el estado, no el objeto item completo
+							created_at: item.created_at, // Fecha de añadido
+							updated_at: item.updated_at, // Fecha de modificación
 						};
 
 						return simplifiedItem;
@@ -295,6 +299,8 @@ export class UserItemsService {
 							genero: ['Desconocido'],
 							imagen: null,
 							estado: item.estado,
+							created_at: item.created_at, // Fecha de añadido
+							updated_at: item.updated_at, // Fecha de modificación
 						};
 
 						return fallbackItem;
