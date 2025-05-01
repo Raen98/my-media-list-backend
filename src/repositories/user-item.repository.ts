@@ -16,65 +16,6 @@ export class UserItemRepository extends Repository<UserItem> {
 	}
 
 	/**
-	 * Obtiene los amigos del usuario que tienen un ítem específico
-	 */
-	async obtenerAmigosConItem(
-		userId: number,
-		id_api: string,
-		tipo: string
-	): Promise<{ id: number; estado: string; imagen_id: string }[]> {
-		const raw = await this.createQueryBuilder('item')
-			.select(['item.estado AS item_estado', 'user.id AS user_id'])
-			.innerJoin('item.user', 'user')
-			.where('item.id_api = :id_api', { id_api })
-			.andWhere('item.tipo = :tipo', { tipo })
-			.andWhere(
-				`user.id IN (
-			SELECT CASE
-			  WHEN uf.user_id = :userId THEN uf.friend_id
-			  WHEN uf.friend_id = :userId THEN uf.user_id
-			END
-			FROM user_friends uf
-			WHERE uf.user_id = :userId OR uf.friend_id = :userId
-		  )`,
-				{ userId }
-			)
-			.getRawMany<{ user_id: number; item_estado: string }>();
-
-		return raw.map((r) => ({
-			id: r.user_id,
-			estado: r.item_estado,
-			imagen_id: 'avatar1', // Simulado
-		}));
-	}
-
-	/**
-	 * Cuenta cuántos amigos del usuario tienen un ítem con el mismo id_api y tipo.
-	 * Requiere que exista una tabla user_friends con columnas user_id y friend_id.
-	 */
-	async contarUsuariosConItem(
-		id_api: string,
-		tipo: string,
-		userId: number
-	): Promise<number> {
-		return this.createQueryBuilder('item')
-			.where('item.id_api = :id_api', { id_api })
-			.andWhere('item.tipo = :tipo', { tipo })
-			.andWhere(
-				`item.user_id IN (
-				SELECT CASE
-					WHEN uf.user_id = :userId THEN uf.friend_id
-					WHEN uf.friend_id = :userId THEN uf.user_id
-				END
-				FROM user_friends uf
-				WHERE uf.user_id = :userId OR uf.friend_id = :userId
-			)`,
-				{ userId }
-			)
-			.getCount();
-	}
-
-	/**
 	 * Obtiene todos los ítems de la colección de un usuario con filtros opcionales
 	 */
 	async obtenerColeccionUsuario(
@@ -240,52 +181,6 @@ export class UserItemRepository extends Repository<UserItem> {
 			return result;
 		} catch (error) {
 			console.error('Error al obtener actividad de usuario:', error);
-			return [];
-		}
-	}
-
-	/**
-	 * Obtiene los ítems más populares entre los amigos del usuario
-	 * @param userId ID del usuario
-	 * @param limit Número máximo de resultados
-	 */
-	async obtenerItemsPopularesEntreAmigos(
-		userId: number,
-		limit: number = 5
-	): Promise<PopularItem[]> {
-		try {
-			// Consulta SQL para obtener ítems populares entre amigos
-			const result: { id_api: string; tipo: string; count: number }[] =
-				await this.dataSource.query(
-					`
-				SELECT 
-					ui.id_api,
-					ui.tipo,
-					COUNT(DISTINCT ui.user_id) as count
-				FROM 
-					user_items ui
-				WHERE 
-					ui.user_id IN (
-						SELECT CASE
-							WHEN uf.user_id = ? THEN uf.friend_id
-							WHEN uf.friend_id = ? THEN uf.user_id
-						END
-						FROM user_friends uf
-						WHERE uf.user_id = ? OR uf.friend_id = ?
-					)
-				GROUP BY 
-					ui.id_api, ui.tipo
-				ORDER BY 
-					COUNT(DISTINCT ui.user_id) DESC,
-					MAX(ui.updated_at) DESC
-				LIMIT ?
-			`,
-					[userId, userId, userId, userId, limit]
-				);
-
-			return result;
-		} catch (error) {
-			console.error('Error al obtener ítems populares:', error);
 			return [];
 		}
 	}

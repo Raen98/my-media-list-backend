@@ -35,7 +35,7 @@ export class SearchService {
 
 	/**
 	 * Realiza una búsqueda en APIs externas según el tipo (P, S, L, V).
-	 * Devuelve los resultados enriquecidos con estado del usuario y nº de amigos.
+	 * Devuelve los resultados enriquecidos con estado del usuario y nº de seguidos.
 	 */
 	async buscar(
 		params: SearchDto,
@@ -76,15 +76,15 @@ export class SearchService {
 				itemsMap.set(key, { id: item.id, estado: item.estado });
 			});
 
-			// Añadir info extra (estado del usuario y nº de amigos)
+			// Añadir info extra (estado del usuario y nº de seguidos)
 			await Promise.all(
 				resultados.map(async (item) => {
 					const key = String(item.id_api).trim();
 
-					// Contar amigos que lo tienen
+					// Contar seguidos que lo tienen
 					try {
 						const count =
-							await this.userItemRepository.contarUsuariosConItem(
+							await this.userItemRepository.contarSeguidosConItem(
 								item.id_api,
 								item.tipo,
 								user.id
@@ -92,7 +92,7 @@ export class SearchService {
 						item.numAmigos = count ?? 0;
 					} catch (err) {
 						console.error(
-							` Error contando amigos para ${item.id_api}:`,
+							` Error contando seguidos para ${item.id_api}:`,
 							err
 						);
 						item.numAmigos = 0;

@@ -30,7 +30,7 @@ export class SerieController {
 
 	/**
 	 * GET /serie?id_api=...
-	 * Devuelve los detalles de una serie + estado del usuario y amigos que la tienen.
+	 * Devuelve los detalles de una serie + estado del usuario y seguidos que la tienen.
 	 */
 	@Get()
 	@ApiOperation({ summary: 'Obtener detalles de una serie por su id_api' })
@@ -42,7 +42,7 @@ export class SerieController {
 	@ApiResponse({
 		status: 200,
 		description:
-			'Detalles de la serie, item del usuario y amigos que la tienen',
+			'Detalles de la serie, item del usuario y seguidos que la tienen',
 	})
 	@ApiResponse({ status: 404, description: 'Serie no encontrada' })
 	async getSerie(@Query('id_api') id_api: string, @Req() req: AuthRequest) {

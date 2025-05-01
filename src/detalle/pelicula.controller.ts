@@ -30,7 +30,7 @@ export class PeliculaController {
 
 	/**
 	 * GET /pelicula?id_api=...
-	 * Devuelve los detalles de una película de TMDB + estado del usuario y amigos que la tienen.
+	 * Devuelve los detalles de una película de TMDB + estado del usuario y seguidos que la tienen.
 	 */
 	@Get()
 	@ApiOperation({ summary: 'Obtener detalles de una película por su id_api' })
@@ -42,7 +42,7 @@ export class PeliculaController {
 	@ApiResponse({
 		status: 200,
 		description:
-			'Detalles de la película, item del usuario y amigos que la tienen',
+			'Detalles de la película, item del usuario y seguidos que la tienen',
 	})
 	@ApiResponse({ status: 404, description: 'Película no encontrada' })
 	async getPelicula(

@@ -31,7 +31,7 @@ export class VideojuegoController {
 	/**
 	 * GET /videojuego?id_api=...
 	 * Devuelve todos los detalles del videojuego con ese id en RAWG,
-	 * el estado del usuario (si lo tiene) y qué amigos también lo tienen.
+	 * el estado del usuario (si lo tiene) y qué seguidos también lo tienen.
 	 */
 	@Get()
 	@ApiOperation({
@@ -44,7 +44,7 @@ export class VideojuegoController {
 	})
 	@ApiResponse({
 		status: 200,
-		description: 'Detalles del videojuego, estado del usuario y amigos',
+		description: 'Detalles del videojuego, estado del usuario y seguidos',
 	})
 	@ApiResponse({ status: 404, description: 'Videojuego no encontrado' })
 	async getVideojuego(

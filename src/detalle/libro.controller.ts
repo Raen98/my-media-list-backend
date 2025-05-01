@@ -31,7 +31,7 @@ export class LibrosController {
 	/**
 	 *  GET /libro?id_api=...
 	 * Devuelve la información completa de un libro a partir del `id_api` de Google Books.
-	 * También incluye un listado de amigos del usuario que tienen ese libro.
+	 * También incluye un listado de seguidos del usuario que tienen ese libro.
 	 */
 	@Get()
 	@ApiOperation({ summary: 'Obtener detalles de un libro por su id_api' })
@@ -42,7 +42,7 @@ export class LibrosController {
 	})
 	@ApiResponse({
 		status: 200,
-		description: 'Detalles del libro y amigos que lo tienen',
+		description: 'Detalles del libro y seguidos que lo tienen',
 	})
 	@ApiResponse({ status: 404, description: 'Libro no encontrado' })
 	@Get()
