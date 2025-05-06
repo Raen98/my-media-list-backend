@@ -40,9 +40,11 @@ export class AuthService {
 				return { message: 'username' };
 			}
 
-			if (password.length < 8) {
+			// Solo verificar que tenga al menos 6 caracteres
+			if (password.length < 6) {
 				return { message: 'password' };
 			}
+			// Se eliminó cualquier otra validación de contraseña
 
 			const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -67,23 +69,28 @@ export class AuthService {
 	async login(
 		email: string,
 		password: string
-	): Promise<{ token: string; id: number }> {
+	): Promise<{ token: string; id: number; avatar_id: string }> {
 		// 1. Buscar usuario en la BD
 		const user = await this.usersRepository.findOneBy({ email });
 		if (!user) {
-			return { token: '', id: -1 };
+			return { token: '', id: -1, avatar_id: '' };
 		}
 
 		// 2. Comparar contraseñas
 		const isPasswordValid = await bcrypt.compare(password, user.password);
 		if (!isPasswordValid) {
-			return { token: '', id: -1 };
+			return { token: '', id: -1, avatar_id: '' };
 		}
 
 		// 3. Generar JWT
 		const token = this.generateJwt(user);
 
-		return { token, id: user.id };
+		// Retornar token, id y avatar_id
+		return {
+			token,
+			id: user.id,
+			avatar_id: user.avatar_id || 'avatar1',
+		};
 	}
 
 	async changePassword(
@@ -139,8 +146,6 @@ export class AuthService {
 		}
 
 		// Eliminar usuario
-		// La cascada eliminará todos los registros relacionados automáticamente
-		// debido a las restricciones ON DELETE CASCADE en la base de datos
 		await this.usersRepository.remove(user);
 
 		return { message: 'Cuenta eliminada correctamente' };

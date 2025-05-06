@@ -1,11 +1,4 @@
-// src/auth/dto/register.dto.ts
-import {
-	IsEmail,
-	IsString,
-	MinLength,
-	Matches,
-	IsOptional,
-} from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -32,16 +25,12 @@ export class RegisterDto {
 	email: string;
 
 	@ApiProperty({
-		example: 'Password123!',
-		description:
-			'Contraseña (mín. 8 caracteres, incluir mayúscula y número)',
+		example: 'password',
+		description: 'Contraseña (mínimo 6 caracteres)',
 	})
 	@IsString()
-	@MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
-	@Matches(/^(?=.*[A-Z])(?=.*[0-9])/, {
-		message:
-			'La contraseña debe incluir al menos una letra mayúscula y un número',
-	})
+	@MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
+	// Eliminada la validación de Matches que requería mayúsculas y números
 	password: string;
 
 	@ApiProperty({

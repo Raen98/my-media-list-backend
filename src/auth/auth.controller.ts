@@ -50,20 +50,28 @@ export class AuthController {
 			type: 'object',
 			properties: {
 				email: { type: 'string', example: 'ejemplo@email.com' },
-				password: { type: 'string', example: '12345678' },
+				password: { type: 'string', example: '123456' },
 			},
 			required: ['email', 'password'],
 		},
 	})
 	@ApiResponse({
 		status: 200,
-		description: 'Login exitoso, devuelve JWT y Id',
+		description: 'Login exitoso, devuelve JWT, Id y avatar_id',
+		schema: {
+			type: 'object',
+			properties: {
+				token: { type: 'string' },
+				id: { type: 'number' },
+				avatar_id: { type: 'string' },
+			},
+		},
 	})
 	@ApiResponse({ status: 401, description: 'Credenciales incorrectas' })
 	async login(
 		@Body('email') email: string,
 		@Body('password') password: string
-	): Promise<{ token: string; id: number }> {
+	): Promise<{ token: string; id: number; avatar_id: string }> {
 		return this.authService.login(email, password);
 	}
 
