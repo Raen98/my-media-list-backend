@@ -175,22 +175,56 @@ export class TmdbService implements OnModuleInit {
 				params: { query, language: 'es-ES', page: 1 },
 			});
 
-			return response.data.results.slice(0, 20).map((item) => ({
-				id_api: item.id,
-				tipo,
-				imagen: item.poster_path
-					? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-					: null,
-				titulo: item.title || item.name || 'Sin título',
-				descripcion: item.overview || 'Sin descripción',
-				fechaLanzamiento:
-					item.release_date || item.first_air_date || 'Desconocido',
-				genero: (item.genre_ids ?? []).map((id) =>
-					tipo === 'P'
-						? this.genresMovie[id] || 'Desconocido'
-						: this.genresTv[id] || 'Desconocido'
-				),
-			}));
+			// Obtener los detalles completos de cada resultado
+			const detailedResults = await Promise.all(
+				response.data.results.slice(0, 20).map(async (item) => {
+					try {
+						if (tipo === 'P') {
+							const details = await this.buscarPeliculaPorId(
+								item.id.toString()
+							);
+							return {
+								...details,
+								tipo,
+							};
+						} else {
+							const details = await this.buscarSeriePorId({
+								id_api: item.id.toString(),
+							});
+							return {
+								...details,
+								tipo,
+							};
+						}
+					} catch (error) {
+						console.error(
+							`Error al obtener detalles para ${item.id}:`,
+							error
+						);
+						return {
+							id_api: item.id,
+							tipo,
+							imagen: item.poster_path
+								? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+								: null,
+							titulo: item.title || item.name || 'Sin título',
+							descripcion: item.overview || 'Sin descripción',
+							fechaLanzamiento:
+								item.release_date ||
+								item.first_air_date ||
+								'Desconocido',
+							genero: (item.genre_ids ?? []).map((id) =>
+								tipo === 'P'
+									? this.genresMovie[id] || 'Desconocido'
+									: this.genresTv[id] || 'Desconocido'
+							),
+							autor: 'Desconocido',
+						};
+					}
+				})
+			);
+
+			return detailedResults;
 		} catch (error) {
 			console.error('Error en TMDB:', (error as Error).message);
 			return [];
