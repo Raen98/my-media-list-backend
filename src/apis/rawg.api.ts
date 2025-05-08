@@ -19,7 +19,11 @@ interface RawgGame {
 }
 
 interface RawgResponse {
-	results?: RawgGame[];
+	results: RawgGame[];
+}
+
+interface RawgGameDetail extends RawgGame {
+	developers: { name: string }[];
 }
 
 interface WikipediaResponse {
@@ -43,11 +47,21 @@ export class RawgService {
 
 			const juegos = response.data.results ?? [];
 
-			//  Obtener descripción desde Wikipedia
+			//  Obtener descripción desde Wikipedia y detalles completos de cada juego
 			const juegosConDescripcion = await Promise.all(
 				juegos.map(async (juego) => {
 					const descripcion = await this.buscarDescripcionWikipedia(
 						juego.name
+					);
+
+					// Obtener detalles completos del juego para tener la desarrolladora
+					const detallesJuego = await axios.get<RawgGameDetail>(
+						`${RAWG_BASE_URL}/${juego.id}`,
+						{
+							params: {
+								key: RAWG_TOKEN,
+							},
+						}
 					);
 
 					return {
@@ -56,7 +70,9 @@ export class RawgService {
 						imagen: juego.background_image || null,
 						titulo: juego.name || 'Sin título',
 						descripcion: descripcion || 'Sin descripción',
-						autor: juego.developers?.[0]?.name || 'Desconocido',
+						autor:
+							detallesJuego.data.developers?.[0]?.name ||
+							'Desconocida',
 						fechaLanzamiento: juego.released || 'Desconocido',
 						genero: juego.genres?.map((g) => g.name) ?? [
 							'Desconocido',
